@@ -258,8 +258,25 @@ public class UserRepositoryImp implements UserRepository {
 
     @Override
     public Integer deleteById(Long id) {
-        return jdbcClient.sql("DELETE FROM users WHERE id = :id")
+
+        Optional<Long> addressIdOpt = jdbcClient.sql("SELECT address_id FROM users WHERE id = :id")
+                .param("id", id)
+                .query(Long.class)
+                .optional();
+
+        int rows = jdbcClient.sql("DELETE FROM users WHERE id = :id")
                 .param("id", id)
                 .update();
+
+        addressIdOpt.ifPresent(addressId -> {
+            if (addressId != null) {
+                jdbcClient.sql("DELETE FROM addresses WHERE id = :addressId")
+                        .param("addressId", addressId)
+                        .update();
+            }
+        });
+
+        return rows;
+
     }
 }
