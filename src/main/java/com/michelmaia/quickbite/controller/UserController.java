@@ -1,6 +1,7 @@
 package com.michelmaia.quickbite.controller;
 
 import com.michelmaia.quickbite.dto.ErrorDTO;
+import com.michelmaia.quickbite.dto.PageResponseDTO;
 import com.michelmaia.quickbite.model.User;
 import com.michelmaia.quickbite.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -11,10 +12,10 @@ import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
 import java.util.Optional;
 
 @Tag(name = "User Management", description = "Endpoints for managing users")
@@ -48,12 +49,9 @@ public class UserController {
                     @ApiResponse(responseCode = "200", description = "List of users retrieved successfully")
             })
     @GetMapping
-    public ResponseEntity<List<User>> findAllUsers(
-            @RequestParam(name = "page", defaultValue = "1") int page,
-            @RequestParam(name = "size", defaultValue = "10") int size,
-            @RequestParam(name = "roleId", required = false) Long roleId) {
-        LOGGER.info("GET -> /api/users - Fetching all users - Page: {}, Size: {}", page, size);
-        List<User> users = userService.findAllUsers(page, size, roleId);
+    public ResponseEntity<PageResponseDTO<User>> findAllUsers(Pageable pageable, @RequestParam Optional<Long> roleId) {
+        LOGGER.info("GET -> /api/users - Fetching all users - Page: {}, Size: {}", pageable.getPageNumber(), pageable.getPageSize());
+        PageResponseDTO<User> users = userService.findAllUsers(pageable, roleId);
         return ResponseEntity.ok(users);
     }
 

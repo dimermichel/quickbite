@@ -1,8 +1,10 @@
 package com.michelmaia.quickbite.service;
 
+import com.michelmaia.quickbite.dto.PageResponseDTO;
 import com.michelmaia.quickbite.model.Role;
 import com.michelmaia.quickbite.model.User;
 import com.michelmaia.quickbite.repository.UserRepository;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -19,12 +21,8 @@ public class UserService {
         this.passwordEncoder = passwordEncoder;
     }
 
-    public List<User> findAllUsers(int page, int size, Long roleId) {
-        int offset = (page - 1) * size;
-        if (roleId == null) {
-            return userRepository.findAll(size, offset);
-        }
-        return userRepository.findAll(size, offset, roleId);
+    public PageResponseDTO<User> findAllUsers(Pageable pageable, Optional<Long> roleId) {
+        return userRepository.findAllPaginated(pageable, roleId);
     }
 
     public Optional<User> findUserById(Long id) {

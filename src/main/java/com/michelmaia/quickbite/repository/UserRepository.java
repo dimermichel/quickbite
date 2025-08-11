@@ -1,8 +1,9 @@
 package com.michelmaia.quickbite.repository;
 
+import com.michelmaia.quickbite.dto.PageResponseDTO;
 import com.michelmaia.quickbite.model.User;
+import org.springframework.data.domain.Pageable;
 
-import java.util.List;
 import java.util.Optional;
 
 public interface UserRepository {
@@ -12,9 +13,7 @@ public interface UserRepository {
 
     boolean existsByUsername(String username);
 
-    List<User> findAll(int size, int offset);
-
-    List<User> findAll(int size, int offset, Long roleId);
+    PageResponseDTO<User> findAllPaginated(Pageable pageable, Optional<Long> roleId);
 
     User save(User user);
 

@@ -1,13 +1,16 @@
 package com.michelmaia.quickbite.repository;
 
+import com.michelmaia.quickbite.dto.PageResponseDTO;
 import com.michelmaia.quickbite.mapper.UserRowMapper;
 import com.michelmaia.quickbite.model.Role;
 import com.michelmaia.quickbite.model.User;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Repository;
+import org.springframework.data.domain.Pageable;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 @Repository
 public class UserRepositoryImp implements UserRepository {
@@ -22,25 +25,25 @@ public class UserRepositoryImp implements UserRepository {
 
     private List<Role> findRolesByUserId(Long userId) {
         return jdbcClient.sql("""
-                SELECT r.id, r.name
-                FROM roles r
-                JOIN user_roles ur ON ur.role_id = r.id
-                WHERE ur.user_id = :userId
-            """)
-            .param("userId", userId)
-            .query((rs, rowNum) -> new Role(rs.getLong("id"), rs.getString("name")))
-            .list();
+                            SELECT r.id, r.name
+                            FROM roles r
+                            JOIN user_roles ur ON ur.role_id = r.id
+                            WHERE ur.user_id = :userId
+                        """)
+                .param("userId", userId)
+                .query((rs, rowNum) -> new Role(rs.getLong("id"), rs.getString("name")))
+                .list();
     }
 
     private void insertUserRoles(Long userId, List<Role> roles) {
         for (Role role : roles) {
             jdbcClient.sql("""
-                    INSERT INTO user_roles (user_id, role_id)
-                    VALUES (:userId, :roleId)
-                """)
-                .param("userId", userId)
-                .param("roleId", role.getId())
-                .update();
+                                INSERT INTO user_roles (user_id, role_id)
+                                VALUES (:userId, :roleId)
+                            """)
+                    .param("userId", userId)
+                    .param("roleId", role.getId())
+                    .update();
         }
     }
 
@@ -54,12 +57,12 @@ public class UserRepositoryImp implements UserRepository {
     @Override
     public Optional<User> findById(Long id) {
         Optional<User> userOpt = jdbcClient.sql("""
-                    SELECT u.id, u.name, u.email, u.username, u.password, u.enabled, u.created_at, u.updated_at,
-                           a.street, a.city, a.state, a.zip_code
-                    FROM users u
-                    LEFT JOIN addresses a ON u.address_id = a.id
-                    WHERE u.id = :id
-                """)
+                            SELECT u.id, u.name, u.email, u.username, u.password, u.enabled, u.created_at, u.updated_at,
+                                   a.street, a.city, a.state, a.zip_code
+                            FROM users u
+                            LEFT JOIN addresses a ON u.address_id = a.id
+                            WHERE u.id = :id
+                        """)
                 .param("id", id)
                 .query(userRowMapper)
                 .optional();
@@ -71,12 +74,12 @@ public class UserRepositoryImp implements UserRepository {
     @Override
     public Optional<User> findByUsername(String username) {
         Optional<User> user = jdbcClient.sql("""
-                    SELECT u.id, u.name, u.email, u.username, u.password, u.enabled, u.created_at, u.updated_at,
-                           a.street, a.city, a.state, a.zip_code
-                    FROM users u
-                    LEFT JOIN addresses a ON u.address_id = a.id
-                    WHERE u.username = :username
-                """)
+                            SELECT u.id, u.name, u.email, u.username, u.password, u.enabled, u.created_at, u.updated_at,
+                                   a.street, a.city, a.state, a.zip_code
+                            FROM users u
+                            LEFT JOIN addresses a ON u.address_id = a.id
+                            WHERE u.username = :username
+                        """)
                 .param("username", username)
                 .query(userRowMapper)
                 .optional();
@@ -95,47 +98,119 @@ public class UserRepositoryImp implements UserRepository {
     }
 
     @Override
-    public List<User> findAll(int size, int offset) {
-        return findAll(size, offset, null);
-    }
-
-    @Override
-    public List<User> findAll(int size, int offset, Long roleId) {
-        String sql = "";
-
-        if (roleId != null) {
-            sql = """
-                SELECT u.id, u.name, u.email, u.username, u.password, u.enabled, u.created_at, u.updated_at,
-                       a.street, a.city, a.state, a.zip_code
-                FROM users u
-                LEFT JOIN addresses a ON u.address_id = a.id
-                JOIN user_roles ur ON u.id = ur.user_id
-                WHERE ur.role_id = :roleId
-                LIMIT :size OFFSET :offset
-            """;
+    public PageResponseDTO<User> findAllPaginated(Pageable pageable, Optional<Long> roleId) {
+        // Fetch total count based on roleId
+        Long total;
+        if (roleId.isPresent()) {
+            total = jdbcClient.sql("""
+                            SELECT COUNT(DISTINCT u.id) 
+                            FROM users u 
+                            JOIN user_roles ur ON u.id = ur.user_id 
+                            WHERE ur.role_id = :roleId
+                            """)
+                    .param("roleId", roleId.get())
+                    .query(Long.class)
+                    .single();
         } else {
-            sql = """
-                SELECT u.id, u.name, u.email, u.username, u.password, u.enabled, u.created_at, u.updated_at,
-                       a.street, a.city, a.state, a.zip_code
-                FROM users u
-                LEFT JOIN addresses a ON u.address_id = a.id
-                LIMIT :size OFFSET :offset
-            """;
+            total = jdbcClient.sql("SELECT COUNT(*) FROM users")
+                    .query(Long.class)
+                    .single();
         }
 
-    var query = jdbcClient.sql(sql)
-            .param("size", size)
-            .param("offset", offset);
+        String sortClause = buildSortClause(pageable);
+        String sql = getSqlString(roleId, sortClause);
 
-    if (roleId != null) {
-        query = query.param("roleId", roleId);
+        var query = jdbcClient.sql(sql)
+                .param("size", pageable.getPageSize())
+                .param("offset", pageable.getOffset());
+
+        if (roleId.isPresent()) {
+            query = query.param("roleId", roleId.get());
+        }
+
+        List<User> users = query.query(userRowMapper).list();
+        users.forEach(user -> user.setRoles(findRolesByUserId(user.getId())));
+        return new PageResponseDTO<>(
+                users,
+                pageable.getPageNumber(),
+                pageable.getPageSize(),
+                total
+        );
+
     }
 
-    List<User> users = query.query(userRowMapper).list();
-    users.forEach(user -> user.setRoles(findRolesByUserId(user.getId())));
-    return users;
+    private static final Set<String> ALLOWED_SORT_COLUMNS = Set.of(
+            "id", "name", "email", "username", "enabled", "created_at", "updated_at"
+    );
 
-}
+    private String buildSortClause(Pageable pageable) {
+        if (pageable.getSort().isEmpty()) {
+            return "";
+        }
+
+        StringBuilder sortBuilder = new StringBuilder(" ORDER BY ");
+        pageable.getSort().forEach(order -> {
+            String rawProperty = order.getProperty();
+            String property = rawProperty.replaceAll("[\\[\\]\"']", "").trim();
+
+            // Validate the property against whitelist
+            if (!isValidSortProperty(property)) {
+                throw new IllegalArgumentException("Invalid sort property: " + property);
+            }
+
+            sortBuilder.append("u.").append(order.getProperty())
+                    .append(" ").append(order.getDirection().name())
+                    .append(", ");
+        });
+
+        // Remove trailing comma and space
+        String result = sortBuilder.toString();
+        return result.substring(0, result.length() - 2);
+    }
+
+    private boolean isValidSortProperty(String property) {
+        // Check if a property is in the whitelist
+        if (!ALLOWED_SORT_COLUMNS.contains(property)) {
+            return false;
+        }
+        // Additional validation: only alphanumeric and underscore
+        return property.matches("^[a-zA-Z0-9_]+$");
+    }
+
+    private static String getSqlString(Optional<Long> roleId, String sortClause) {
+        // Ensure sortClause is properly formatted for SQL
+        String formattedSortClause = "";
+        if (sortClause != null && !sortClause.trim().isEmpty()) {
+            // Remove array brackets if present and format properly
+            String cleanSortClause = sortClause.replaceAll("[\\[\\]]", "").trim();
+            formattedSortClause = cleanSortClause;
+        }
+
+        // Build the SQL query based on the presence of roleId
+        String sql = "";
+        if (roleId.isPresent()) {
+            sql = """
+                    SELECT u.id, u.name, u.email, u.username, u.password, u.enabled, u.created_at, u.updated_at,
+                           a.street, a.city, a.state, a.zip_code
+                    FROM users u
+                    LEFT JOIN addresses a ON u.address_id = a.id
+                    JOIN user_roles ur ON u.id = ur.user_id
+                    WHERE ur.role_id = :roleId"""
+                    + " " + formattedSortClause + """
+                        LIMIT :size OFFSET :offset
+                    """;
+        } else {
+            sql = """
+                    SELECT u.id, u.name, u.email, u.username, u.password, u.enabled, u.created_at, u.updated_at,
+                           a.street, a.city, a.state, a.zip_code
+                    FROM users u
+                    LEFT JOIN addresses a ON u.address_id = a.id""" +
+                    " " + formattedSortClause + """
+                        LIMIT :size OFFSET :offset
+                    """;
+        }
+        return sql;
+    }
 
     @Override
     public User save(User user) {
@@ -146,23 +221,23 @@ public class UserRepositoryImp implements UserRepository {
         Long addressId = null;
         if (user.getAddress() != null) {
             addressId = jdbcClient.sql("""
-                    INSERT INTO addresses (street, city, state, zip_code)
-                    VALUES (:street, :city, :state, :zipCode)
-                    RETURNING id
-                """)
-                .param("street", user.getAddress().getStreet())
-                .param("city", user.getAddress().getCity())
-                .param("state", user.getAddress().getState())
-                .param("zipCode", user.getAddress().getZipCode())
-                .query(Long.class)
-                .single();
+                                INSERT INTO addresses (street, city, state, zip_code)
+                                VALUES (:street, :city, :state, :zipCode)
+                                RETURNING id
+                            """)
+                    .param("street", user.getAddress().getStreet())
+                    .param("city", user.getAddress().getCity())
+                    .param("state", user.getAddress().getState())
+                    .param("zipCode", user.getAddress().getZipCode())
+                    .query(Long.class)
+                    .single();
         }
 
         Long userId = jdbcClient.sql("""
-                    INSERT INTO users (name, username, password, email, address_id, enabled)
-                    VALUES (:name, :username, :password, :email, :addressId, :enabled)
-                    RETURNING id
-                """)
+                            INSERT INTO users (name, username, password, email, address_id, enabled)
+                            VALUES (:name, :username, :password, :email, :addressId, :enabled)
+                            RETURNING id
+                        """)
                 .param("name", user.getName())
                 .param("username", user.getUsername())
                 .param("password", user.getPassword())
@@ -190,10 +265,10 @@ public class UserRepositoryImp implements UserRepository {
             if (existingAddressId.isPresent() && existingAddressId.get() != null) {
                 // Update existing address
                 jdbcClient.sql("""
-                    UPDATE addresses
-                    SET street = :street, city = :city, state = :state, zip_code = :zipCode
-                    WHERE id = :addressId
-                """)
+                                    UPDATE addresses
+                                    SET street = :street, city = :city, state = :state, zip_code = :zipCode
+                                    WHERE id = :addressId
+                                """)
                         .param("street", user.getAddress().getStreet())
                         .param("city", user.getAddress().getCity())
                         .param("state", user.getAddress().getState())
@@ -203,10 +278,10 @@ public class UserRepositoryImp implements UserRepository {
             } else {
                 // Create a new address and link it to the user
                 Long newAddressId = jdbcClient.sql("""
-                    INSERT INTO addresses (street, city, state, zip_code)
-                    VALUES (:street, :city, :state, :zipCode)
-                    RETURNING id
-                """)
+                                    INSERT INTO addresses (street, city, state, zip_code)
+                                    VALUES (:street, :city, :state, :zipCode)
+                                    RETURNING id
+                                """)
                         .param("street", user.getAddress().getStreet())
                         .param("city", user.getAddress().getCity())
                         .param("state", user.getAddress().getState())
@@ -225,24 +300,24 @@ public class UserRepositoryImp implements UserRepository {
         // Update the user with a new password
         if (user.getPassword() != null) {
             jdbcClient.sql("""
-                UPDATE users
-                SET password = :password,
-                    updated_at = CURRENT_TIMESTAMP
-                WHERE id = :id
-            """)
+                                UPDATE users
+                                SET password = :password,
+                                    updated_at = CURRENT_TIMESTAMP
+                                WHERE id = :id
+                            """)
                     .param("password", user.getPassword())
                     .param("id", id)
                     .update();
         } else {
             jdbcClient.sql("""
-            UPDATE users
-            SET name = :name,
-                username = :username,
-                email = :email,
-                enabled = :enabled,
-                updated_at = CURRENT_TIMESTAMP
-            WHERE id = :id
-        """)
+                                UPDATE users
+                                SET name = :name,
+                                    username = :username,
+                                    email = :email,
+                                    enabled = :enabled,
+                                    updated_at = CURRENT_TIMESTAMP
+                                WHERE id = :id
+                            """)
                     .param("name", user.getName())
                     .param("username", user.getUsername())
                     .param("email", user.getEmail())

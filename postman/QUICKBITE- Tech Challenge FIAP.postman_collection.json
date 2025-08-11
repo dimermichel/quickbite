@@ -2,7 +2,7 @@
 	"info": {
 		"_postman_id": "c0e476f5-8bd1-4c79-a50e-be7940d25d5b",
 		"name": "QUICKBITE: Tech Challenge FIAP",
-		"description": "### 📋 **Collection Summary**\n\n**QuickBite** is a REST API for user management and authentication built with Spring Boot, featuring JWT-based security and comprehensive user operations.\n\n**Base URL:** `http://localhost:8080` (or your configured server URL)\n\n---\n\n### 🔐 **Authentication**\n\nThe API uses **JWT Bearer Token** authentication for protected endpoints.\n\n**How to authenticate:**\n\n1. Call the `/api/login` endpoint with valid credentials\n    \n2. Copy the returned JWT token\n    \n3. Add it to the `Authorization` header as: `Bearer`\n    \n\n---\n\n### 📂 **API Endpoints Overview**\n\n#### **Authentication Endpoints**\n\n| Method | Endpoint | Description | Auth Required |\n| --- | --- | --- | --- |\n| `POST` | `/api/login` | User authentication | ❌ Open Route |\n| `POST` | `/api/change-password` | Change user password | ❌ Open Route |\n\n#### **User Management Endpoints**\n\n| Method | Endpoint | Description | Auth Required |\n| --- | --- | --- | --- |\n| `POST` | `/api/users/register` | Register new user (USER role) | ❌ Open Route |\n| `GET` | `/api/users` | Get all users (paginated) | ✅ Required |\n| `GET` | `/api/users/{id}` | Get user by ID | ✅ Required |\n| `POST` | `/api/users` | Create new user | ✅ Required |\n| `PUT` | `/api/users/{id}` | Update user by ID | ✅ Required |\n| `DELETE` | `/api/users/{id}` | Delete user by ID | ✅ Required |\n\n---\n\n### 🔧 **Environment Variables**\n\nSet up these variables in your Postman environment:\n\n``` json\n{  \"baseUrl\": \"http://localhost:8080\",  \"jwtToken\": \"{{token_from_login_response}}\",  \"userId\": \"1\"}\n\n ```\n\n---\n\n### 📝 **Request Examples**\n\n#### **1\\. User Login**\n\n``` json\nPOST {{baseUrl}}/api/login\nContent-Type: application/json\n{\n  \"username\": \"your-username\",\n  \"password\": \"your-password\"\n}\n\n ```\n\n**Expected Response:**\n\n``` json\n{  \"token\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...\",  \"username\": \"your-username\"}\n\n ```\n\n#### **2\\. Register New User**\n\n``` json\nPOST {{baseUrl}}/api/users/register\nContent-Type: application/json\n{\n  \"username\": \"newuser\",\n  \"email\": \"newuser@example.com\",\n  \"password\": \"securePassword123\",\n  \"name\": \"New User\"\n}\n\n ```\n\n#### **3\\. Get All Users (Paginated)**\n\n``` bash\nGET {{baseUrl}}/api/users?page=1&size=10&roleId=1\nAuthorization: Bearer {{jwtToken}}\n\n ```\n\n#### **4\\. Get User by ID**\n\n```\nGET {{baseUrl}}/api/users/{{userId}}\nAuthorization: Bearer {{jwtToken}}\n\n ```\n\n#### **5\\. Update User**\n\n```\nPUT {{baseUrl}}/api/users/{{userId}}\nAuthorization: Bearer {{jwtToken}}\nContent-Type: application/json\n{\n  \"username\": \"updateduser\",\n  \"email\": \"updated@example.com\",\n  \"name\": \"Updated Name\"\n}\n\n ```\n\n#### **6\\. Delete User**\n\n```\nDELETE {{baseUrl}}/api/users/{{userId}}\nAuthorization: Bearer {{jwtToken}}\n\n ```\n\n#### **7\\. Change Password**\n\n```\nPOST {{baseUrl}}/api/change-password\nContent-Type: application/json\n{\n  \"username\": \"your-username\",\n  \"password\": \"currentPassword\",\n  \"newPassword\": \"newSecurePassword123\"\n}\n\n ```\n\n---\n\n### 📊 **Response Status Codes**\n\n| Status Code | Description |\n| --- | --- |\n| `200` | Success |\n| `201` | Created successfully |\n| `204` | Success (no content) |\n| `400` | Bad Request (validation error) |\n| `401` | Unauthorized (invalid credentials) |\n| `404` | Not Found |\n\n---\n\n### 🚀 **Getting Started**\n\n1. **Import Collection**: Import this collection into Postman\n    \n2. **Set Environment**: Configure the environment variables\n    \n3. **Test Authentication**: Start with the login endpoint\n    \n4. **Explore APIs**: Use the JWT token to access protected endpoints\n    \n\n---\n\n### 💡 **Tips for Testing**\n\n- **Authentication Flow**: Always login first to get the JWT token\n    \n- **Token Management**: The token has an expiration time - re-login when it expires\n    \n- **Pagination**: Use `page` and `size` parameters for user listing\n    \n- **Error Handling**: Check response bodies for detailed error messages\n    \n- **Role-Based Access**: Different endpoints may require different user roles\n    \n\n---\n\n### 🔒 **Security Notes**\n\n- Registration automatically assigns **USER** role (Admin role cannot be set via registration)\n    \n- JWT tokens are required for most operations\n    \n- Password changes require current password verification\n    \n- Email and username must be unique across the system",
+		"description": "### 📋 **Collection Summary**\n\n**QuickBite** is a REST API for user management and authentication built with Spring Boot, featuring JWT-based security and comprehensive user operations.\n\n**Base URL:** `http://localhost:8080` (or your configured server URL)\n\n---\n\n### 🔐 **Authentication**\n\nThe API uses **JWT Bearer Token** authentication for protected endpoints.\n\n**How to authenticate:**\n\n1. Call the `/api/login` endpoint with valid credentials\n    \n2. Copy the returned JWT token\n    \n3. Add it to the `Authorization` header as: `Bearer`\n    \n\n---\n\n### 📂 **API Endpoints Overview**\n\n#### **Authentication Endpoints**\n\n| Method | Endpoint | Description | Auth Required |\n| --- | --- | --- | --- |\n| `POST` | `/api/login` | User authentication | ❌ Open Route |\n| `POST` | `/api/change-password` | Change user password | ❌ Open Route |\n\n#### **User Management Endpoints**\n\n| Method | Endpoint | Description | Auth Required |\n| --- | --- | --- | --- |\n| `POST` | `/api/users/register` | Register new user (USER role) | ❌ Open Route |\n| `GET` | `/api/users` | Get all users (paginated) | ✅ Required |\n| `GET` | `/api/users/{id}` | Get user by ID | ✅ Required |\n| `POST` | `/api/users` | Create new user | ✅ Required |\n| `PUT` | `/api/users/{id}` | Update user by ID | ✅ Required |\n| `DELETE` | `/api/users/{id}` | Delete user by ID | ✅ Required |\n\n---\n\n### 🔧 **Environment Variables**\n\nSet up these variables in your Postman environment:\n\n``` json\n{  \"baseUrl\": \"http://localhost:8080\",  \"jwtToken\": \"{{token_from_login_response}}\",  \"userId\": \"1\"}\n\n ```\n\n---\n\n### 📝 **Request Examples**\n\n#### **1\\. User Login**\n\n``` json\nPOST {{baseUrl}}/api/login\nContent-Type: application/json\n{\n  \"username\": \"your-username\",\n  \"password\": \"your-password\"\n}\n\n ```\n\n**Expected Response:**\n\n``` json\n{  \"token\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...\",  \"username\": \"your-username\"}\n\n ```\n\n#### **2\\. Register New User**\n\n``` json\nPOST {{baseUrl}}/api/users/register\nContent-Type: application/json\n{\n  \"username\": \"newuser\",\n  \"email\": \"newuser@example.com\",\n  \"password\": \"securePassword123\",\n  \"name\": \"New User\"\n}\n\n ```\n\n#### **3\\. Get All Users (Paginated)**\n\n``` bash\nGET {{baseUrl}}/api/users?page=1&size=10&sort=name&roleId=1\nAuthorization: Bearer {{jwtToken}}\n\n ```\n\n#### **4\\. Get User by ID**\n\n```\nGET {{baseUrl}}/api/users/{{userId}}\nAuthorization: Bearer {{jwtToken}}\n\n ```\n\n#### **5\\. Update User**\n\n```\nPUT {{baseUrl}}/api/users/{{userId}}\nAuthorization: Bearer {{jwtToken}}\nContent-Type: application/json\n{\n  \"username\": \"updateduser\",\n  \"email\": \"updated@example.com\",\n  \"name\": \"Updated Name\"\n}\n\n ```\n\n#### **6\\. Delete User**\n\n```\nDELETE {{baseUrl}}/api/users/{{userId}}\nAuthorization: Bearer {{jwtToken}}\n\n ```\n\n#### **7\\. Change Password**\n\n```\nPOST {{baseUrl}}/api/change-password\nContent-Type: application/json\n{\n  \"username\": \"your-username\",\n  \"password\": \"currentPassword\",\n  \"newPassword\": \"newSecurePassword123\"\n}\n\n ```\n\n---\n\n### 📊 **Response Status Codes**\n\n| Status Code | Description |\n| --- | --- |\n| `200` | Success |\n| `201` | Created successfully |\n| `204` | Success (no content) |\n| `400` | Bad Request (validation error) |\n| `401` | Unauthorized (invalid credentials) |\n| `404` | Not Found |\n\n---\n\n### 🚀 **Getting Started**\n\n1. **Import Collection**: Import this collection into Postman\n    \n2. **Set Environment**: Configure the environment variables\n    \n3. **Test Authentication**: Start with the login endpoint\n    \n4. **Explore APIs**: Use the JWT token to access protected endpoints\n    \n\n---\n\n### 💡 **Tips for Testing**\n\n- **Authentication Flow**: Always login first to get the JWT token\n    \n- **Token Management**: The token has an expiration time - re-login when it expires\n    \n- **Pagination**: Use `page` and `size` parameters for user listing\n    \n- **Error Handling**: Check response bodies for detailed error messages\n    \n- **Role-Based Access**: Different endpoints may require different user roles\n    \n\n---\n\n### 🔒 **Security Notes**\n\n- Registration automatically assigns **USER** role (Admin role cannot be set via registration)\n    \n- JWT tokens are required for most operations\n    \n- Password changes require current password verification\n    \n- Email and username must be unique across the system",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
 		"_exporter_id": "9067767"
 	},
@@ -99,7 +99,7 @@
 						"method": "GET",
 						"header": [],
 						"url": {
-							"raw": "{{base_url}}/api/users?page=1&size=10&roleId",
+							"raw": "{{base_url}}/api/users?page=0&size=3&sort=name",
 							"host": [
 								"{{base_url}}"
 							],
@@ -110,15 +110,20 @@
 							"query": [
 								{
 									"key": "page",
-									"value": "1"
+									"value": "0"
 								},
 								{
 									"key": "size",
-									"value": "10"
+									"value": "3"
+								},
+								{
+									"key": "sort",
+									"value": "name"
 								},
 								{
 									"key": "roleId",
-									"value": null
+									"value": "3",
+									"disabled": true
 								}
 							]
 						}
@@ -155,14 +160,14 @@
 						"method": "GET",
 						"header": [],
 						"url": {
-							"raw": "{{base_url}}/api/users/1",
+							"raw": "{{base_url}}/api/users/{{id}}",
 							"host": [
 								"{{base_url}}"
 							],
 							"path": [
 								"api",
 								"users",
-								"1"
+								"{{id}}"
 							],
 							"query": [
 								{
