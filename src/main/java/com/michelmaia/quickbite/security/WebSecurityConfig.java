@@ -7,7 +7,6 @@ import org.springframework.security.config.annotation.method.configuration.Enabl
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
@@ -21,11 +20,6 @@ public class WebSecurityConfig {
 
     public WebSecurityConfig(SecurityConfig securityConfig) {
         this.securityConfig = securityConfig;
-    }
-
-    @Bean
-    public BCryptPasswordEncoder encoder(){
-        return new BCryptPasswordEncoder();
     }
 
     private static final String[] SWAGGER_WHITELIST = {
@@ -52,6 +46,14 @@ public class WebSecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/api/users").hasRole(ADMIN_ROLE) // Only admins can create users directly
                         .requestMatchers(HttpMethod.GET, "/api/users").hasAnyRole("USER", ADMIN_ROLE)
                         .requestMatchers(HttpMethod.GET, "/api/users/**").hasAnyRole("USER", ADMIN_ROLE)
+                        .requestMatchers(HttpMethod.GET, "/api/restaurants").hasAnyRole("USER", "OWNER", ADMIN_ROLE)
+                        .requestMatchers(HttpMethod.POST, "/api/restaurants/**").hasAnyRole("OWNER", ADMIN_ROLE)
+                        .requestMatchers(HttpMethod.PUT, "/api/restaurants/**").hasAnyRole("OWNER", ADMIN_ROLE)
+                        .requestMatchers(HttpMethod.DELETE, "/api/restaurants/**").hasRole(ADMIN_ROLE)
+                        .requestMatchers(HttpMethod.GET, "/api/menu-items").hasAnyRole("USER", "OWNER", ADMIN_ROLE)
+                        .requestMatchers(HttpMethod.POST, "/api/menu-items/**").hasAnyRole("OWNER", ADMIN_ROLE)
+                        .requestMatchers(HttpMethod.PUT, "/api/menu-items/**").hasAnyRole("OWNER", ADMIN_ROLE)
+                        .requestMatchers(HttpMethod.DELETE, "/api/menu-items/**").hasRole(ADMIN_ROLE)
                         .anyRequest().authenticated()
                 ).build();
     }
