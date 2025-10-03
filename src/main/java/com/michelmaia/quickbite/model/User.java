@@ -22,7 +22,7 @@ public class User {
     private String password;
     private List<Role> roles = new ArrayList<>();
     private Boolean enabled;
+    private Address address;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
-    private Address address;
 }
