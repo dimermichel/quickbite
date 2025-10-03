@@ -1,4 +1,3 @@
-
 # 🍕 QuickBite
 
 > **FIAP 2025 - Java Tech Challenge**
@@ -22,7 +21,10 @@ A modern Spring Boot application for food service management with JWT authentica
 ## ✨ Features
 
 - 🔐 **JWT Authentication** - Secure token-based authentication
-- 🛡️ **Spring Security** - Comprehensive security configuration
+- 🛡️ **Spring Security** - Comprehensive security configuration with role-based access control
+- 👥 **User Management** - Complete user CRUD operations with pagination
+- 🏪 **Restaurant Management** - Create and manage restaurant profiles
+- 🍽️ **Menu Management** - Full menu item management with availability tracking
 - 🐘 **PostgreSQL** - Robust database with Flyway migrations
 - 📚 **OpenAPI Documentation** - Interactive Swagger UI
 - 🐳 **Docker Ready** - Complete containerization setup
@@ -32,7 +34,7 @@ A modern Spring Boot application for food service management with JWT authentica
 ## 🛠 Tech Stack
 
 ### Backend
-- **Java 21** - Programming language
+- **Java 17** - Programming language
 - **Spring Boot 3.5.3** - Application framework
 - **Spring Security** - Authentication & authorization
 - **Spring Web** - REST API development
@@ -44,6 +46,7 @@ A modern Spring Boot application for food service management with JWT authentica
 
 ### Security
 - **JWT (JJWT 0.12.6)** - JSON Web Token implementation
+- **BCrypt** - Password hashing
 
 ### Documentation
 - **SpringDoc OpenAPI 3** - API documentation
@@ -56,8 +59,7 @@ A modern Spring Boot application for food service management with JWT authentica
 ## 🚀 Quick Start
 
 ### Using Docker Compose (Recommended)
-```
-bash
+```bash
 # Clone the repository
 git clone https://github.com/dimermichel/quickbite.git
 cd quickbite
@@ -69,9 +71,8 @@ docker-compose up -d
 open http://localhost:8080
 ```
 ### Local Development
-```
-bash
-# Prerequisites: Java 21+, Maven 3.6+, PostgreSQL
+```bash
+# Prerequisites: Java 17+, Maven 3.6+, PostgreSQL
 
 # Clone and navigate to project
 git clone https://github.com/dimermichel/quickbite.git
@@ -87,7 +88,7 @@ cd quickbite
 
 ### Prerequisites
 
-- **Java 21** or higher
+- **Java 17** or higher
 - **Maven 3.6+**
 - **Docker & Docker Compose** (for containerized setup)
 - **PostgreSQL 15+** (for local development)
@@ -117,8 +118,7 @@ cd quickbite
 ### Starting the Application
 
 **With Docker Compose:**
-```
-bash
+```bash
 docker-compose up -d
 ```
 **Local Development:**
@@ -140,6 +140,13 @@ docker-compose up -d
 - **Username**: postgres
 - **Password**: postgres (development)
 
+### Default Credentials
+
+The application comes with a pre-configured admin user:
+- **Username**: admin
+- **Password**: admin
+- **Role**: ADMIN
+
 ## 📖 API Documentation
 
 The application includes comprehensive API documentation using OpenAPI 3.0.
@@ -147,18 +154,93 @@ The application includes comprehensive API documentation using OpenAPI 3.0.
 - **Swagger UI**: http://localhost:8080/swagger-ui.html
 - **JSON Spec**: http://localhost:8080/v3/api-docs
 
-### Sample API Endpoints
+### API Modules
 
+#### 🔐 Authentication
 ```shell script
-# Authentication
+# Login
 POST /api/auth/login
-POST /api/auth/register
 
-# Protected endpoints (require JWT token)
-GET /api/users
-POST /api/users
+# Register
+POST /api/auth/register
 ```
 
+
+#### 👥 User Management
+```shell script
+# Get all users (paginated)
+GET /api/users
+
+# Get user by ID
+GET /api/users/{id}
+
+# Create user (Admin only)
+POST /api/users
+
+# Update user
+PUT /api/users/{id}
+
+# Delete user (Admin only)
+DELETE /api/users/{id}
+```
+
+
+#### 🏪 Restaurant Management
+```shell script
+# Get all restaurants (paginated)
+GET /api/restaurants
+
+# Filter by cuisine
+GET /api/restaurants/by-cuisine?cuisine={cuisine}
+
+# Filter by rating
+GET /api/restaurants/by-rating?minRating={rating}
+
+# Get restaurant by ID
+GET /api/restaurants/{id}
+
+# Create restaurant (Owner/Admin)
+POST /api/restaurants
+
+# Update restaurant (Owner/Admin)
+PUT /api/restaurants/{id}
+
+# Delete restaurant (Admin only)
+DELETE /api/restaurants/{id}
+```
+
+
+#### 🍽️ Menu Item Management
+```shell script
+# Get menu item by ID
+GET /api/menu-items/{id}
+
+# Search by name and restaurant
+GET /api/menu-items/restaurant/search?name={name}&restaurantId={id}
+
+# Get all items by restaurant
+GET /api/menu-items/restaurant?restaurantId={id}
+
+# Get available items
+GET /api/menu-items/restaurant/available?available=true&restaurantId={id}
+
+# Create menu item (Owner/Admin)
+POST /api/menu-items
+
+# Update menu item (Owner/Admin)
+PUT /api/menu-items/{id}
+
+# Delete menu item (Admin only)
+DELETE /api/menu-items/{id}
+```
+
+### Role-Based Access Control
+
+The application implements three user roles:
+
+- **USER** - Can view restaurants and menu items
+- **OWNER** - Can create and manage restaurants and menu items
+- **ADMIN** - Full access to all endpoints including user management
 
 ## 🔧 Development
 
@@ -174,13 +256,28 @@ src/
 │   │   ├── repository/      # Data access layer
 │   │   ├── model/           # Entity models
 │   │   ├── dto/             # Data transfer objects
+│   │   ├── mapper/          # Row mappers for JDBC
 │   │   └── security/        # Security configuration
 │   └── resources/
 │       ├── db/migration/    # Flyway migration scripts
+│       │   ├── V1__create-initial-schemas.sql
+│       │   └── V2__create-restaurant-menu-schemas.sql
 │       └── application.yml  # Application configuration
 └── test/                    # Test classes
 ```
 
+
+### Database Schema
+
+#### V1 - Initial Schema
+- **users** - User accounts with authentication
+- **addresses** - Physical addresses
+- **roles** - User roles (USER, OWNER, ADMIN)
+- **user_roles** - Many-to-many relationship
+
+#### V2 - Restaurant & Menu Schema
+- **restaurants** - Restaurant profiles with owner and address
+- **menu_items** - Menu items linked to restaurants
 
 ### Code Style
 
@@ -188,27 +285,19 @@ src/
 - Follow **Spring Boot** best practices
 - Implement proper **validation** on DTOs
 - Use **@RestController** for API endpoints
+- Apply **role-based security** on endpoints
 
 ### Database Migrations
 
 Create new migration files in `src/main/resources/db/migration/`:
 
 ```sql
--- V1__create-initial-schemas.sql
-CREATE TABLE IF NOT EXISTS users (
+-- V3__your-migration-name.sql
+CREATE TABLE IF NOT EXISTS your_table (
     id BIGSERIAL PRIMARY KEY,
-    name VARCHAR(255) NOT NULL,
-    username VARCHAR(255) NOT NULL UNIQUE,
-    password VARCHAR(255) NOT NULL,
-    email VARCHAR(255) NOT NULL UNIQUE,
-    address_id BIGINT,
-    enabled BOOLEAN DEFAULT TRUE,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (address_id) REFERENCES addresses(id) ON DELETE SET NULL
+    -- your columns
 );
 ```
-
 
 ## 🧪 Testing
 
@@ -225,7 +314,6 @@ CREATE TABLE IF NOT EXISTS users (
 ./mvnw test -Dtest=UserServiceTest
 ```
 
-
 ### Test Categories
 
 - **Unit Tests** - Service layer testing
@@ -238,7 +326,7 @@ CREATE TABLE IF NOT EXISTS users (
 
 ```yaml
 services:
-  app:          # Spring Boot application
+  app:          # Spring Boot application (Java 17)
   postgres:     # PostgreSQL database
 ```
 
@@ -259,7 +347,6 @@ docker-compose down
 docker-compose up --build -d
 ```
 
-
 ### Production Deployment
 
 ```shell script
@@ -272,7 +359,6 @@ docker run -p 8080:8080 \
   -e SPRING_DATASOURCE_URL=jdbc:postgresql://your-db:5432/quickbite \
   quickbite:latest
 ```
-
 
 ## 🤝 Contributing
 
@@ -288,6 +374,7 @@ docker run -p 8080:8080 \
 - Write tests for new features
 - Update documentation as needed
 - Use meaningful commit messages
+- Ensure all tests pass before submitting PR
 
 ## 📄 License
 
@@ -315,5 +402,18 @@ If you have any questions or need help, please:
 
 ---
 
-**Made with ❤️ for FIAP 2025 Java Tech Challenge**
+## 📝 Recent Updates
 
+### Latest Changes
+- ✅ Added Restaurant Management system with full CRUD operations
+- ✅ Implemented Menu Item Management with availability tracking
+- ✅ Enhanced role-based access control (USER, OWNER, ADMIN roles)
+- ✅ Migrated from Java 21 to Java 17 for broader compatibility
+- ✅ Improved security configuration with generic PasswordEncoder
+- ✅ Added pagination support for restaurant listings
+- ✅ Enhanced data models with proper relationships
+- ✅ Updated Docker configuration for Java 17
+
+---
+
+**Made with ❤️ for FIAP 2025 Java Tech Challenge**
