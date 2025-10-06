@@ -12,12 +12,13 @@ import java.time.LocalDateTime;
 @ToString
 public class MenuItem {
     private Long id;
+    private Long restaurantId;
     private Restaurant restaurant;
     private String name;
     private String description;
     private Double price;
     private String imageUrl;
-    private Boolean available;
+    private Boolean isAvailable;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 }

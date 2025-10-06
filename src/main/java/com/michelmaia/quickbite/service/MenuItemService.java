@@ -1,7 +1,6 @@
 package com.michelmaia.quickbite.service;
 
 import com.michelmaia.quickbite.dto.MenuItemDTO;
-import com.michelmaia.quickbite.model.MenuItem;
 import com.michelmaia.quickbite.repository.MenuItemRepository;
 import org.springframework.stereotype.Service;
 
@@ -17,19 +16,19 @@ public class MenuItemService {
         this.menuItemRepository = menuItemRepository;
     }
 
-    public Optional<MenuItem> findMenuItemById(Long id){
+    public Optional<MenuItemDTO> findMenuItemById(Long id){
         return menuItemRepository.findById(id);
     }
 
-    public List<MenuItem> findAllAvailableByRestaurant(Boolean available, Long restaurantId) {
+    public List<MenuItemDTO> findAllAvailableByRestaurant(Boolean available, Long restaurantId) {
         return menuItemRepository.findAllAvailableByRestaurantId(available, restaurantId);
     }
 
-    public List<MenuItem> findAllByRestaurant(Long restaurantId) {
+    public List<MenuItemDTO> findAllByRestaurant(Long restaurantId) {
         return menuItemRepository.findAllByRestaurantId(restaurantId);
     }
 
-    public Optional<MenuItem> findByNameByRestaurant(String name, Long restaurantId){
+    public List<MenuItemDTO> findByNameByRestaurant(String name, Long restaurantId){
         return menuItemRepository.findByNameByRestaurantId(name, restaurantId);
     }
 

@@ -1,7 +1,6 @@
 package com.michelmaia.quickbite.controller;
 
 import com.michelmaia.quickbite.dto.MenuItemDTO;
-import com.michelmaia.quickbite.model.MenuItem;
 import com.michelmaia.quickbite.service.MenuItemService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -36,9 +35,9 @@ public class MenuItemController {
                     @ApiResponse(responseCode = "404", description = "Menu item not found")
             })
     @GetMapping("/{id}")
-    public ResponseEntity<Optional<MenuItem>> findMenuItemById(@Parameter(description = "Menu Item Id") @PathVariable Long id) {
+    public ResponseEntity<Optional<MenuItemDTO>> findMenuItemById(@Parameter(description = "Menu Item Id") @PathVariable Long id) {
         LOGGER.info("GET -> /api/menu-items/{} - Fetching menu item by id", id);
-        Optional<MenuItem> menuItem = menuItemService.findMenuItemById(id);
+        Optional<MenuItemDTO> menuItem = menuItemService.findMenuItemById(id);
         if (menuItem.isPresent()) {
             return ResponseEntity.ok(menuItem);
         } else {
@@ -47,23 +46,18 @@ public class MenuItemController {
         }
     }
 
-    @Operation(summary = "Find menu item by name and restaurant", description = "Fetches a menu item by their name within a specific restaurant",
+    @Operation(summary = "Find a list of menu items by name and restaurant", description = "Fetches a list of menu items by their name and restaurant ID",
             responses = {
-                    @ApiResponse(responseCode = "200", description = "Menu item found"),
+                    @ApiResponse(responseCode = "200", description = "Menu items found"),
                     @ApiResponse(responseCode = "404", description = "Menu item not found")
             })
     @GetMapping("/restaurant/search")
-    public ResponseEntity<Optional<MenuItem>> findByNameByRestaurant(@Parameter(description = "Menu Item Name") @RequestParam String name,
+    public ResponseEntity<List<MenuItemDTO>> findByNameByRestaurant(@Parameter(description = "Menu Item Name for search") @RequestParam String name,
                                                                     @Parameter(description = "Restaurant Id") @RequestParam Long restaurantId) {
         LOGGER.info("GET -> /api/menu-items/restaurant/search - Fetching menu item by name: {} and restaurant id: {}", name, restaurantId);
         var nameDecoded = URLDecoder.decode(name, StandardCharsets.UTF_8);
-        Optional<MenuItem> menuItem = menuItemService.findByNameByRestaurant(nameDecoded, restaurantId);
-        if (menuItem.isPresent()) {
-            return ResponseEntity.ok(menuItem);
-        } else {
-            LOGGER.info("GET -> /api/menu-items/restaurant/search - Menu item not found for name: {} and restaurant id: {}", name, restaurantId);
-            return ResponseEntity.notFound().build();
-        }
+        List<MenuItemDTO> menuItems = menuItemService.findByNameByRestaurant(nameDecoded, restaurantId);
+        return ResponseEntity.ok(menuItems);
     }
 
     @Operation(summary = "Find all available menu items by restaurant", description = "Fetches a list of all available menu items for a specific restaurant",
@@ -71,9 +65,9 @@ public class MenuItemController {
                     @ApiResponse(responseCode = "200", description = "List of available menu items retrieved successfully")
             })
     @GetMapping("/restaurant/available")
-    public ResponseEntity<List<MenuItem>> findAllAvailableByRestaurant(@RequestParam Boolean available, @RequestParam Long restaurantId) {
+    public ResponseEntity<List<MenuItemDTO>> findAllAvailableByRestaurant(@RequestParam Boolean available, @RequestParam Long restaurantId) {
         LOGGER.info("GET -> /api/menu-items/restaurant/available - Fetching all available menu items for restaurant id: {}", restaurantId);
-        List<MenuItem> menuItems = menuItemService.findAllAvailableByRestaurant(available, restaurantId);
+        List<MenuItemDTO> menuItems = menuItemService.findAllAvailableByRestaurant(available, restaurantId);
         return ResponseEntity.ok(menuItems);
     }
 
@@ -82,9 +76,9 @@ public class MenuItemController {
                     @ApiResponse(responseCode = "200", description = "List of menu items retrieved successfully")
             })
     @GetMapping("/restaurant")
-    public ResponseEntity<List<MenuItem>> findAllByRestaurant(@RequestParam Long restaurantId) {
+    public ResponseEntity<List<MenuItemDTO>> findAllByRestaurant(@RequestParam Long restaurantId) {
         LOGGER.info("GET -> /api/menu-items/restaurant - Fetching all menu items for restaurant id: {}", restaurantId);
-        List<MenuItem> menuItems = menuItemService.findAllByRestaurant(restaurantId);
+        List<MenuItemDTO> menuItems = menuItemService.findAllByRestaurant(restaurantId);
         return ResponseEntity.ok(menuItems);
     }
 

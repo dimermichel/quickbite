@@ -18,82 +18,113 @@ public class MenuItemRepositoryImp implements MenuItemRepository {
     }
 
     @Override
-    public Optional<MenuItem> findById(Long id) {
-        var menuItem = jdbcClient.sql("SELECT * FROM menu_items WHERE id = :id")
+    public Optional<MenuItemDTO> findById(Long id) {
+        var menuItem = jdbcClient.sql("""
+                        SELECT id, restaurant_id, name, description, price, image_url, is_available, created_at, updated_at 
+                        FROM menu_items WHERE id = :id
+                        """)
                 .param("id", id)
                 .query(MenuItem.class)
                 .optional();
 
-        return menuItem;
+        return menuItem.map(this::toDTO);
     }
 
     @Override
-    public Optional<MenuItem> findByNameByRestaurantId(String name, Long restaurantId) {
-        var menuItem = jdbcClient.sql("SELECT * FROM menu_items WHERE name = :name")
-                .param("name", name)
-                .query(MenuItem.class)
-                .optional();
-        return menuItem;
-    }
-
-    @Override
-    public List<MenuItem> findAllAvailableByRestaurantId(Boolean available, Long restaurantId) {
-        var menuItems = jdbcClient.sql("SELECT * FROM menu_items WHERE available = :available AND restaurant_id = :restaurantId")
-                .param("available", available)
+    public List<MenuItemDTO> findByNameByRestaurantId(String name, Long restaurantId) {
+        var menuItems = jdbcClient.sql("""
+                        SELECT id, restaurant_id, name, description, price, image_url, is_available, created_at, updated_at
+                        FROM menu_items WHERE LOWER(name) LIKE LOWER(:name) AND restaurant_id = :restaurantId
+                        """)
+                .param("name", "%" + name + "%")
                 .param("restaurantId", restaurantId)
                 .query(MenuItem.class)
                 .list();
-        return menuItems;
+        return menuItems.stream().map(this::toDTO).toList();
     }
 
     @Override
-    public List<MenuItem> findAllByRestaurantId(Long restaurantId) {
-        var menuItems = jdbcClient.sql("SELECT * FROM menu_items WHERE restaurant_id = :restaurantId")
+    public List<MenuItemDTO> findAllAvailableByRestaurantId(Boolean isAvailable, Long restaurantId) {
+        var menuItems = jdbcClient.sql("""
+                        SELECT id, restaurant_id, name, description, price, image_url, is_available, created_at, updated_at
+                        FROM menu_items WHERE is_available = :isAvailable AND restaurant_id = :restaurantId
+                        """)
+                .param("isAvailable", isAvailable)
                 .param("restaurantId", restaurantId)
                 .query(MenuItem.class)
                 .list();
-        return menuItems;
+        return menuItems.stream().map(this::toDTO).toList();
     }
 
     @Override
-    public MenuItem save(MenuItemDTO menuItem) {
-        var savedMenuItem = jdbcClient.sql("INSERT INTO menu_items (restaurant_id, name, description, price, image_url, available, created_at, updated_at) " +
-                        "VALUES (:restaurantId, :name, :description, :price, :imageUrl, :available, NOW(), NOW()) RETURNING *")
+    public List<MenuItemDTO> findAllByRestaurantId(Long restaurantId) {
+        var menuItems = jdbcClient.sql("""
+                        SELECT id, restaurant_id, name, description, price, image_url, is_available, created_at, updated_at
+                        FROM menu_items WHERE restaurant_id = :restaurantId
+                        """)
+                .param("restaurantId", restaurantId)
+                .query(MenuItem.class)
+                .list();
+        return menuItems.stream().map(this::toDTO).toList();
+    }
+
+    @Override
+    public MenuItemDTO save(MenuItemDTO menuItem) {
+        var savedMenuItem = jdbcClient.sql("""
+                        INSERT INTO menu_items (restaurant_id, name, description, price, image_url, is_available, created_at, updated_at)
+                        VALUES (:restaurantId, :name, :description, :price, :imageUrl, :isAvailable, NOW(), NOW())
+                        RETURNING id, restaurant_id, name, description, price, image_url, is_available, created_at, updated_at
+                        """)
                 .param("restaurantId", menuItem.restaurantId())
                 .param("name", menuItem.name())
                 .param("description", menuItem.description())
                 .param("price", menuItem.price())
                 .param("imageUrl", menuItem.imageUrl())
-                .param("available", menuItem.available())
+                .param("isAvailable", menuItem.isAvailable())
                 .query(MenuItem.class)
                 .optional()
-                .orElse(null);
-        return savedMenuItem;
+                .orElseThrow(() -> new IllegalStateException("Failed to save menu item"));
+        return toDTO(savedMenuItem);
     }
 
     @Override
-    public MenuItem update(MenuItemDTO menuItem) {
-        var updatedMenuItem = jdbcClient.sql("UPDATE menu_items SET restaurant_id = :restaurantId, name = :name, description = :description, " +
-                        "price = :price, image_url = :imageUrl, available = :available, updated_at = NOW() WHERE id = :id RETURNING *")
+    public MenuItemDTO update(MenuItemDTO menuItem) {
+        var updatedMenuItem = jdbcClient.sql("""
+                        UPDATE menu_items SET restaurant_id = :restaurantId, name = :name, description = :description,
+                        price = :price, image_url = :imageUrl, is_available = :isAvailable, updated_at = NOW() WHERE id = :id
+                        RETURNING id, restaurant_id, name, description, price, image_url, is_available, created_at, updated_at
+                        """)
                 .param("restaurantId", menuItem.restaurantId())
                 .param("name", menuItem.name())
                 .param("description", menuItem.description())
                 .param("price", menuItem.price())
                 .param("imageUrl", menuItem.imageUrl())
-                .param("available", menuItem.available())
+                .param("isAvailable", menuItem.isAvailable())
                 .param("id", menuItem.id())
                 .query(MenuItem.class)
                 .optional()
-                .orElse(null);
-        return updatedMenuItem;
+                .orElseThrow(() -> new IllegalStateException("Failed to save menu item"));
+        return toDTO(updatedMenuItem);
     }
 
     @Override
     public Integer deleteById(Long id) {
-        int deleted = jdbcClient.sql("DELETE FROM menu_items WHERE id = :id")
+        return jdbcClient.sql("DELETE FROM menu_items WHERE id = :id")
                 .param("id", id)
                 .update();
+    }
 
-        return deleted;
+    private MenuItemDTO toDTO(MenuItem menuItem) {
+        return new MenuItemDTO(
+                menuItem.getId(),
+                menuItem.getRestaurantId(),
+                menuItem.getName(),
+                menuItem.getDescription(),
+                menuItem.getPrice(),
+                menuItem.getImageUrl(),
+                menuItem.getIsAvailable(),
+                menuItem.getCreatedAt(),
+                menuItem.getUpdatedAt()
+        );
     }
 }

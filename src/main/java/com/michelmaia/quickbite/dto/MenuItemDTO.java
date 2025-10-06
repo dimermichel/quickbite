@@ -9,7 +9,7 @@ public record MenuItemDTO(
         String description,
         Double price,
         String imageUrl,
-        Boolean available,
+        Boolean isAvailable,
         LocalDateTime createdAt,
         LocalDateTime updatedAt
 ) {
