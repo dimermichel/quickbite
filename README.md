@@ -23,13 +23,15 @@ A modern Spring Boot application for food service management with JWT authentica
 - 🔐 **JWT Authentication** - Secure token-based authentication
 - 🛡️ **Spring Security** - Comprehensive security configuration with role-based access control
 - 👥 **User Management** - Complete user CRUD operations with pagination
-- 🏪 **Restaurant Management** - Create and manage restaurant profiles
-- 🍽️ **Menu Management** - Full menu item management with availability tracking
+- 🏪 **Restaurant Management** - Create and manage restaurant profiles with DTOs
+- 🍽️ **Menu Management** - Full menu item management with availability tracking and search functionality
+- 🔍 **Advanced Search** - Search menu items by name with partial matching (case-insensitive LIKE queries)
 - 🐘 **PostgreSQL** - Robust database with Flyway migrations
 - 📚 **OpenAPI Documentation** - Interactive Swagger UI
 - 🐳 **Docker Ready** - Complete containerization setup
 - ✅ **Input Validation** - Comprehensive request validation
 - 🔄 **Hot Reload** - Development productivity tools
+- 🎯 **DTO Pattern** - Clean separation between entities and API responses
 
 ## 🛠 Tech Stack
 
@@ -38,7 +40,7 @@ A modern Spring Boot application for food service management with JWT authentica
 - **Spring Boot 3.5.3** - Application framework
 - **Spring Security** - Authentication & authorization
 - **Spring Web** - REST API development
-- **Spring JDBC** - Database connectivity
+- **Spring JDBC** - Database connectivity with JdbcClient
 
 ### Database
 - **PostgreSQL 15.3** - Primary database
@@ -215,7 +217,7 @@ DELETE /api/restaurants/{id}
 # Get menu item by ID
 GET /api/menu-items/{id}
 
-# Search by name and restaurant
+# Search by name and restaurant (partial match, case-insensitive)
 GET /api/menu-items/restaurant/search?name={name}&restaurantId={id}
 
 # Get all items by restaurant
@@ -233,6 +235,14 @@ PUT /api/menu-items/{id}
 # Delete menu item (Admin only)
 DELETE /api/menu-items/{id}
 ```
+
+### Search Functionality
+The menu item search endpoint () supports: `/api/menu-items/restaurant/search`
+- **Partial matching** - Search for "burger" finds "Cheeseburger", "Hamburger", etc.
+- **Case-insensitive** - Works with any letter case
+- **Multiple results** - Returns all matching items as a list
+- **Restaurant filtering** - Scoped to a specific restaurant
+
 
 ### Role-Based Access Control
 
@@ -279,13 +289,31 @@ src/
 - **restaurants** - Restaurant profiles with owner and address
 - **menu_items** - Menu items linked to restaurants
 
+### Architecture Patterns
+#### DTO (Data Transfer Object) Pattern
+The application uses DTOs to separate the API layer from the database entities:
+- **Benefits**: Security, flexibility, and cleaner API contracts
+- **Implementation**: All API endpoints return DTOs instead of entity models
+- **Mapping**: Custom mappers convert entities to DTOs in repositories
+
+#### Repository Pattern
+- **Interface-based design** - Clean contracts for data access
+- **JdbcClient usage** - Modern Spring JDBC approach
+- **SQL queries** - Explicit SQL for transparency and performance
+- **Error handling** - Proper exception handling for database operations
+
+
 ### Code Style
 
 - Use **Lombok** annotations to reduce boilerplate
 - Follow **Spring Boot** best practices
 - Implement proper **validation** on DTOs
-- Use **@RestController** for API endpoints
+- Use for API endpoints **@RestController**
 - Apply **role-based security** on endpoints
+- Return **DTOs** from all API endpoints
+- Use for database operations **JdbcClient**
+- Implement **proper error handling** and logging
+
 
 ### Database Migrations
 
@@ -404,7 +432,17 @@ If you have any questions or need help, please:
 
 ## 📝 Recent Updates
 
-### Latest Changes
+### Latest Changes (v2.1.0)
+- 🐛 **Fixed**: Menu item search now properly returns multiple results
+- ✨ **Enhanced**: Search endpoint supports partial name matching with LIKE queries
+- 🔄 **Refactored**: Complete migration to a DTO pattern for all API endpoints
+- 🎯 **Improved**: Restaurant endpoints now return DTOs instead of entities
+- 🔍 **Added**: Case-insensitive search functionality for menu items
+- 📚 **Updated**: API documentation to reflect DTO responses
+- 🛡️ **Enhanced**: Better error handling in the repository layer
+- 🧹 **Cleaned**: Removed entity exposure from the API layer
+
+### Previous Updates (v2.0.0)
 - ✅ Added Restaurant Management system with full CRUD operations
 - ✅ Implemented Menu Item Management with availability tracking
 - ✅ Enhanced role-based access control (USER, OWNER, ADMIN roles)
@@ -413,6 +451,12 @@ If you have any questions or need help, please:
 - ✅ Added pagination support for restaurant listings
 - ✅ Enhanced data models with proper relationships
 - ✅ Updated Docker configuration for Java 17
+
+### Bug Fixes
+- Fixed in menu item search `IncorrectResultSizeDataAccessException`
+- Corrected SQL queries to use proper column names (instead of) `is_available``available`
+- Improved repository methods to handle multiple results correctly
+
 
 ---
 
