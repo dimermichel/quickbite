@@ -7,6 +7,7 @@ import com.michelmaia.quickbite.model.Restaurant;
 import org.springframework.data.domain.Pageable;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Optional;
 
@@ -22,11 +23,11 @@ public class RestaurantRepositoryImp implements RestaurantRepository {
     }
 
     @Override
-    public Optional<Restaurant> findById(Long id) {
+    public Optional<RestaurantDTO> findById(Long id) {
         Optional<Restaurant> restaurantOpt = jdbcClient.sql("""
-                            SELECT r.id, r.owner_id, r.name, r.cuisine, r.rating, r.opening_hours
+                            SELECT r.id, r.owner_id, r.name, r.cuisine, r.rating, r.opening_hours,
                                    r.is_open, r.created_at, r.updated_at,
-                                   a.street, a.city, a.state, a.zip_code
+                                   r.address_id, a.street, a.city, a.state, a.zip_code
                             FROM restaurants r
                             LEFT JOIN addresses a ON r.address_id = a.id
                             WHERE r.id = :id
@@ -34,15 +35,15 @@ public class RestaurantRepositoryImp implements RestaurantRepository {
                 .param("id", id)
                 .query(restaurantRowMapper)
                 .optional();
-        return restaurantOpt;
+        return restaurantOpt.map(this::toDTO);
     }
 
     @Override
-    public Optional<Restaurant> findByOwnerId(Long ownerId) {
+    public Optional<RestaurantDTO> findByOwnerId(Long ownerId) {
         Optional<Restaurant> restaurantOpt = jdbcClient.sql("""
-                            SELECT r.id, r.owner_id, r.name, r.cuisine, r.rating, r.opening_hours
+                            SELECT r.id, r.owner_id, r.name, r.cuisine, r.rating, r.opening_hours,
                                    r.is_open, r.created_at, r.updated_at,
-                                   a.street, a.city, a.state, a.zip_code
+                                   r.address_id, a.street, a.city, a.state, a.zip_code
                             FROM restaurants r
                             LEFT JOIN addresses a ON r.address_id = a.id
                             WHERE r.owner_id = :ownerId
@@ -50,16 +51,16 @@ public class RestaurantRepositoryImp implements RestaurantRepository {
                 .param("ownerId", ownerId)
                 .query(restaurantRowMapper)
                 .optional();
-        return restaurantOpt;
+        return restaurantOpt.map(this::toDTO);
     }
 
     @Override
-    public PageResponseDTO<Restaurant> findByCuisine(Pageable pageable, String cuisine) {
+    public PageResponseDTO<RestaurantDTO> findByCuisine(Pageable pageable, String cuisine) {
         //window function to get both the data and the total count in a single query
         var restaurants = jdbcClient.sql("""
                             SELECT r.id, r.owner_id, r.name, r.cuisine, r.rating, r.opening_hours,
                                    r.is_open, r.created_at, r.updated_at,
-                                   a.street, a.city, a.state, a.zip_code,
+                                   r.address_id, a.street, a.city, a.state, a.zip_code,
                                    COUNT(*) OVER() as total_count
                             FROM restaurants r
                             LEFT JOIN addresses a ON r.address_id = a.id
@@ -76,7 +77,7 @@ public class RestaurantRepositoryImp implements RestaurantRepository {
         Long total = restaurants.isEmpty() ? 0L : restaurants.get(0).getTotalCount();
 
         return new PageResponseDTO<>(
-                restaurants,
+                restaurants.stream().map(this::toDTO).toList(),
                 pageable.getPageNumber(),
                 pageable.getPageSize(),
                 total
@@ -84,11 +85,11 @@ public class RestaurantRepositoryImp implements RestaurantRepository {
     }
 
     @Override
-    public PageResponseDTO<Restaurant> findByRating(Pageable pageable, Double minRating) {
+    public PageResponseDTO<RestaurantDTO> findByRating(Pageable pageable, Double minRating) {
         var restaurants = jdbcClient.sql("""
                             SELECT r.id, r.owner_id, r.name, r.cuisine, r.rating, r.opening_hours,
                                    r.is_open, r.created_at, r.updated_at,
-                                   a.street, a.city, a.state, a.zip_code,
+                                   r.address_id, a.street, a.city, a.state, a.zip_code,
                                    COUNT(*) OVER() as total_count
                             FROM restaurants r
                             LEFT JOIN addresses a ON r.address_id = a.id
@@ -105,7 +106,7 @@ public class RestaurantRepositoryImp implements RestaurantRepository {
         Long total = restaurants.isEmpty() ? 0L : restaurants.get(0).getTotalCount();
 
         return new PageResponseDTO<>(
-                restaurants,
+                restaurants.stream().map(this::toDTO).toList(),
                 pageable.getPageNumber(),
                 pageable.getPageSize(),
                 total
@@ -113,11 +114,11 @@ public class RestaurantRepositoryImp implements RestaurantRepository {
     }
 
     @Override
-    public PageResponseDTO<Restaurant> findAllPaginated(Pageable pageable) {
+    public PageResponseDTO<RestaurantDTO> findAllPaginated(Pageable pageable) {
         var restaurants = jdbcClient.sql("""
                             SELECT r.id, r.owner_id, r.name, r.cuisine, r.rating, r.opening_hours,
                                    r.is_open, r.created_at, r.updated_at,
-                                   a.street, a.city, a.state, a.zip_code,
+                                   r.address_id, a.street, a.city, a.state, a.zip_code,
                                    COUNT(*) OVER() as total_count
                             FROM restaurants r
                             LEFT JOIN addresses a ON r.address_id = a.id
@@ -132,7 +133,7 @@ public class RestaurantRepositoryImp implements RestaurantRepository {
         Long total = restaurants.isEmpty() ? 0L : restaurants.get(0).getTotalCount();
 
         return new PageResponseDTO<>(
-                restaurants,
+                restaurants.stream().map(this::toDTO).toList(),
                 pageable.getPageNumber(),
                 pageable.getPageSize(),
                 total
@@ -140,7 +141,8 @@ public class RestaurantRepositoryImp implements RestaurantRepository {
     }
 
     @Override
-    public Restaurant save(RestaurantDTO restaurant) {
+    @Transactional
+    public RestaurantDTO save(RestaurantDTO restaurant) {
         // Insert the address first (if any)
         Long addressId = null;
         if (restaurant.address() != null) {
@@ -176,7 +178,8 @@ public class RestaurantRepositoryImp implements RestaurantRepository {
     }
 
     @Override
-    public Restaurant update(RestaurantDTO restaurant) {
+    @Transactional
+    public RestaurantDTO update(RestaurantDTO restaurant) {
         // Handle address update/creation
         if (restaurant.address() != null) {
             // First, check if the restaurant already has an address
@@ -214,7 +217,7 @@ public class RestaurantRepositoryImp implements RestaurantRepository {
                         .single();
 
                 // Update the restaurant to reference the new address
-                jdbcClient.sql("UPDATE restaurant SET address_id = :addressId WHERE id = :restaurantId")
+                jdbcClient.sql("UPDATE restaurants SET address_id = :addressId WHERE id = :restaurantId")
                         .param("addressId", newAddressId)
                         .param("restaurantId", restaurant.id())
                         .update();
@@ -243,6 +246,7 @@ public class RestaurantRepositoryImp implements RestaurantRepository {
     }
 
     @Override
+    @Transactional
     public Integer deleteById(Long id) {
         Optional<Long> addressIdOpt = jdbcClient.sql("SELECT address_id FROM restaurants WHERE id = :id")
                 .param("id", id)
@@ -253,6 +257,7 @@ public class RestaurantRepositoryImp implements RestaurantRepository {
                 .param("id", id)
                 .update();
 
+        // Clean up orphaned address if it exists
         addressIdOpt.ifPresent(addressId -> {
             if (addressId != null) {
                 jdbcClient.sql("DELETE FROM addresses WHERE id = :addressId")
@@ -263,4 +268,20 @@ public class RestaurantRepositoryImp implements RestaurantRepository {
 
         return rows;
     }
+
+    private RestaurantDTO toDTO(Restaurant restaurant) {
+        return new RestaurantDTO(
+                restaurant.getId(),
+                restaurant.getOwner() != null ? restaurant.getOwner().getId() : null,
+                restaurant.getAddress(),
+                restaurant.getName(),
+                restaurant.getCuisine(),
+                restaurant.getRating(),
+                restaurant.getOpeningHours(),
+                restaurant.getIsOpen(),
+                restaurant.getCreatedAt(),
+                restaurant.getUpdatedAt()
+        );
+    }
+
 }

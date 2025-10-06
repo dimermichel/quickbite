@@ -16,6 +16,7 @@ public class RestaurantRowMapper implements RowMapper<Restaurant> {
         Address address = null;
         if (rs.getString("street") != null) {
             address = new Address();
+            address.setId(rs.getLong("address_id"));
             address.setStreet(rs.getString("street"));
             address.setCity(rs.getString("city"));
             address.setState(rs.getString("state"));
@@ -41,8 +42,14 @@ public class RestaurantRowMapper implements RowMapper<Restaurant> {
         restaurant.setUpdatedAt(rs.getTimestamp("updated_at").toLocalDateTime());
         restaurant.setAddress(address);
 
-        // Transient field for pagination
-        restaurant.setTotalCount(rs.getLong("total_count"));
+        // Transient field for pagination - only set if column exists
+        try {
+            restaurant.setTotalCount(rs.getLong("total_count"));
+        } catch (SQLException e) {
+            // Column doesn't exist, leave totalCount as null or default value
+            restaurant.setTotalCount(null);
+        }
+        
         return restaurant;
     }
 }

@@ -2,7 +2,6 @@ package com.michelmaia.quickbite.service;
 
 import com.michelmaia.quickbite.dto.PageResponseDTO;
 import com.michelmaia.quickbite.dto.RestaurantDTO;
-import com.michelmaia.quickbite.model.Restaurant;
 import com.michelmaia.quickbite.repository.RestaurantRepository;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -18,23 +17,23 @@ public class RestaurantService {
         this.restaurantRepository = restaurantRepository;
     }
 
-    public Optional<Restaurant> findUserById(Long id){
+    public Optional<RestaurantDTO> findUserById(Long id){
         return restaurantRepository.findById(id);
     }
 
-    public Optional<Restaurant> findByOwnerId(Long ownerId){
+    public Optional<RestaurantDTO> findByOwnerId(Long ownerId){
         return restaurantRepository.findByOwnerId(ownerId);
     }
 
-    public PageResponseDTO<Restaurant> findByCuisine(Pageable pageable, String cuisine) {
+    public PageResponseDTO<RestaurantDTO> findByCuisine(Pageable pageable, String cuisine) {
         return restaurantRepository.findByCuisine(pageable, cuisine);
     }
 
-    public PageResponseDTO<Restaurant> findByRating(Pageable pageable, Double minRating) {
+    public PageResponseDTO<RestaurantDTO> findByRating(Pageable pageable, Double minRating) {
         return restaurantRepository.findByRating(pageable, minRating);
     }
 
-    public PageResponseDTO<Restaurant> findAllRestaurants(Pageable pageable) {
+    public PageResponseDTO<RestaurantDTO> findAllRestaurants(Pageable pageable) {
         return restaurantRepository.findAllPaginated(pageable);
     }
 

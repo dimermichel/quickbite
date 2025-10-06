@@ -2,7 +2,6 @@ package com.michelmaia.quickbite.controller;
 
 import com.michelmaia.quickbite.dto.PageResponseDTO;
 import com.michelmaia.quickbite.dto.RestaurantDTO;
-import com.michelmaia.quickbite.model.Restaurant;
 import com.michelmaia.quickbite.service.RestaurantService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -34,9 +33,9 @@ public class RestaurantController {
                     @ApiResponse(responseCode = "200", description = "List of restaurants retrieved successfully")
             })
     @GetMapping
-    public ResponseEntity<PageResponseDTO<Restaurant>> findAllRestaurants(Pageable pageable) {
+    public ResponseEntity<PageResponseDTO<RestaurantDTO>> findAllRestaurants(Pageable pageable) {
         LOGGER.info("GET -> /api/restaurants - Fetching all restaurants - Page: {}, Size: {}", pageable.getPageNumber(), pageable.getPageSize());
-        PageResponseDTO<Restaurant> restaurants = restaurantService.findAllRestaurants(pageable);
+        PageResponseDTO<RestaurantDTO> restaurants = restaurantService.findAllRestaurants(pageable);
         return ResponseEntity.ok(restaurants);
     }
 
@@ -45,9 +44,9 @@ public class RestaurantController {
                     @ApiResponse(responseCode = "200", description = "List of restaurants retrieved successfully")
             })
     @GetMapping("/by-cuisine")
-    ResponseEntity<PageResponseDTO<Restaurant>> findRestaurantByCuisine(Pageable pageable, @RequestParam String cuisine) {
+    ResponseEntity<PageResponseDTO<RestaurantDTO>> findRestaurantByCuisine(Pageable pageable, @RequestParam String cuisine) {
         LOGGER.info("GET -> /api/restaurants/by-cuisine - Fetching restaurants by cuisine: {} - Page: {}, Size: {}", cuisine, pageable.getPageNumber(), pageable.getPageSize());
-        PageResponseDTO<Restaurant> restaurants = restaurantService.findByCuisine(pageable, cuisine);
+        PageResponseDTO<RestaurantDTO> restaurants = restaurantService.findByCuisine(pageable, cuisine);
         return ResponseEntity.ok(restaurants);
     }
 
@@ -56,9 +55,9 @@ public class RestaurantController {
                     @ApiResponse(responseCode = "200", description = "List of restaurants retrieved successfully")
             })
     @GetMapping("/by-rating")
-    ResponseEntity<PageResponseDTO<Restaurant>> findRestaurantByRating(Pageable pageable, @RequestParam Double minRating) {
+    ResponseEntity<PageResponseDTO<RestaurantDTO>> findRestaurantByRating(Pageable pageable, @RequestParam Double minRating) {
         LOGGER.info("GET -> /api/restaurants/by-rating - Fetching restaurants by minimum rating: {} - Page: {}, Size: {}", minRating, pageable.getPageNumber(), pageable.getPageSize());
-        PageResponseDTO<Restaurant> restaurants = restaurantService.findByRating(pageable, minRating);
+        PageResponseDTO<RestaurantDTO> restaurants = restaurantService.findByRating(pageable, minRating);
         return ResponseEntity.ok(restaurants);
     }
 
@@ -68,9 +67,9 @@ public class RestaurantController {
                     @ApiResponse(responseCode = "404", description = "Restaurant not found")
             })
     @GetMapping("/{id}")
-    public ResponseEntity<Optional<Restaurant>> findRestaurantById(@Parameter(description = "Restaurant Id") @PathVariable Long id) {
+    public ResponseEntity<Optional<RestaurantDTO>> findRestaurantById(@Parameter(description = "Restaurant Id") @PathVariable Long id) {
         LOGGER.info("GET -> /api/restaurants/{} - Fetching restaurant by ID", id);
-        Optional<Restaurant> restaurant = restaurantService.findUserById(id);
+        Optional<RestaurantDTO> restaurant = restaurantService.findUserById(id);
         if (restaurant.isPresent()) {
             return ResponseEntity.ok(restaurant);
         } else {

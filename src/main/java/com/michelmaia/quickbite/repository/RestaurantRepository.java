@@ -2,26 +2,25 @@ package com.michelmaia.quickbite.repository;
 
 import com.michelmaia.quickbite.dto.PageResponseDTO;
 import com.michelmaia.quickbite.dto.RestaurantDTO;
-import com.michelmaia.quickbite.model.Restaurant;
 import org.springframework.data.domain.Pageable;
 
 import java.util.Optional;
 
 public interface RestaurantRepository {
 
-    Optional<Restaurant> findById(Long id);
+    Optional<RestaurantDTO> findById(Long id);
 
-    Optional<Restaurant> findByOwnerId(Long ownerId);
+    Optional<RestaurantDTO> findByOwnerId(Long ownerId);
 
-    PageResponseDTO<Restaurant> findByCuisine(Pageable pageable, String cuisine);
+    PageResponseDTO<RestaurantDTO> findByCuisine(Pageable pageable, String cuisine);
 
-    PageResponseDTO<Restaurant> findByRating(Pageable pageable, Double minRating);
+    PageResponseDTO<RestaurantDTO> findByRating(Pageable pageable, Double minRating);
 
-    PageResponseDTO<Restaurant> findAllPaginated(Pageable pageable);
+    PageResponseDTO<RestaurantDTO> findAllPaginated(Pageable pageable);
 
-    Restaurant save(RestaurantDTO restaurant);
+    RestaurantDTO save(RestaurantDTO restaurant);
 
-    Restaurant update(RestaurantDTO restaurant);
+    RestaurantDTO update(RestaurantDTO restaurant);
 
     Integer deleteById(Long id);
 }
