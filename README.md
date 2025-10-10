@@ -22,16 +22,17 @@ A modern Spring Boot application for food service management with JWT authentica
 
 - 🔐 **JWT Authentication** - Secure token-based authentication
 - 🛡️ **Spring Security** - Comprehensive security configuration with role-based access control
-- 👥 **User Management** - Complete user CRUD operations with pagination
+- 👥 **User Management** - Complete user CRUD operations with pagination and enhanced error handling
 - 🏪 **Restaurant Management** - Create and manage restaurant profiles with DTOs
 - 🍽️ **Menu Management** - Full menu item management with availability tracking and search functionality
 - 🔍 **Advanced Search** - Search menu items by name with partial matching (case-insensitive LIKE queries)
 - 🐘 **PostgreSQL** - Robust database with Flyway migrations
 - 📚 **OpenAPI Documentation** - Interactive Swagger UI
 - 🐳 **Docker Ready** - Complete containerization setup
-- ✅ **Input Validation** - Comprehensive request validation
+- ✅ **Input Validation** - Comprehensive request validation with proper error responses
 - 🔄 **Hot Reload** - Development productivity tools
 - 🎯 **DTO Pattern** - Clean separation between entities and API responses
+- 🚨 **Enhanced Error Handling** - Detailed error messages and HTTP status codes for better debugging
 
 ## 🛠 Tech Stack
 
@@ -41,6 +42,7 @@ A modern Spring Boot application for food service management with JWT authentica
 - **Spring Security** - Authentication & authorization
 - **Spring Web** - REST API development
 - **Spring JDBC** - Database connectivity with JdbcClient
+- - **JDBC** instead of **JPA** for better control over SQL queries and performance.
 
 ### Database
 - **PostgreSQL 15.3** - Primary database
@@ -159,17 +161,21 @@ The application includes comprehensive API documentation using OpenAPI 3.0.
 ### API Modules
 
 #### 🔐 Authentication
-```shell script
+```
 # Login
 POST /api/auth/login
 
-# Register
+# Register (Open Route)
 POST /api/auth/register
+# - Returns 201: User registered successfully
+# - Returns 400: Invalid input data
+# - Returns 409: Username or email already exists
 ```
 
 
+
 #### 👥 User Management
-```shell script
+```
 # Get all users (paginated)
 GET /api/users
 
@@ -179,16 +185,18 @@ GET /api/users/{id}
 # Create user (Admin only)
 POST /api/users
 
-# Update user
+# Update user (includes password encryption)
 PUT /api/users/{id}
 
 # Delete user (Admin only)
 DELETE /api/users/{id}
+# - Returns 204: User deleted successfully
+# - Returns 404: User not found
+# - Returns 409: Cannot delete - user owns restaurants
 ```
 
-
 #### 🏪 Restaurant Management
-```shell script
+```
 # Get all restaurants (paginated)
 GET /api/restaurants
 
@@ -207,13 +215,14 @@ POST /api/restaurants
 # Update restaurant (Owner/Admin)
 PUT /api/restaurants/{id}
 
-# Delete restaurant (Admin only)
+# Delete restaurant (Owner/Admin)
 DELETE /api/restaurants/{id}
 ```
 
 
+
 #### 🍽️ Menu Item Management
-```shell script
+```
 # Get menu item by ID
 GET /api/menu-items/{id}
 
@@ -232,12 +241,12 @@ POST /api/menu-items
 # Update menu item (Owner/Admin)
 PUT /api/menu-items/{id}
 
-# Delete menu item (Admin only)
+# Delete menu item (Owner/Admin)
 DELETE /api/menu-items/{id}
 ```
 
 ### Search Functionality
-The menu item search endpoint () supports: `/api/menu-items/restaurant/search`
+The menu item search endpoint (`/api/menu-items/restaurant/search`) supports:
 - **Partial matching** - Search for "burger" finds "Cheeseburger", "Hamburger", etc.
 - **Case-insensitive** - Works with any letter case
 - **Multiple results** - Returns all matching items as a list
@@ -246,11 +255,16 @@ The menu item search endpoint () supports: `/api/menu-items/restaurant/search`
 
 ### Role-Based Access Control
 
-The application implements three user roles:
+The application implements three user roles with refined permissions:
 
 - **USER** - Can view restaurants and menu items
-- **OWNER** - Can create and manage restaurants and menu items
+- **OWNER** - Can create, update, and delete their own restaurants and menu items
 - **ADMIN** - Full access to all endpoints including user management
+
+#### Updated Permissions (v2.2.0)
+- Restaurant owners can now delete their own restaurants
+- Menu item owners can delete their own menu items
+- All users can view individual restaurant details
 
 ## 🔧 Development
 
@@ -274,7 +288,17 @@ src/
 │       │   └── V2__create-restaurant-menu-schemas.sql
 │       └── application.yml  # Application configuration
 └── test/                    # Test classes
+├── controller/          # Integration tests
+│   ├── LoginControllerIntegrationTest
+│   ├── MenuItemControllerIntegrationTest
+│   ├── RestaurantControllerIntegrationTest
+│   └── UserControllerIntegrationTest
+└── resources/
+├── application-test.properties
+├── cleanup.sql
+└── test-data.sql
 ```
+
 
 
 ### Database Schema
@@ -308,11 +332,13 @@ The application uses DTOs to separate the API layer from the database entities:
 - Use **Lombok** annotations to reduce boilerplate
 - Follow **Spring Boot** best practices
 - Implement proper **validation** on DTOs
-- Use for API endpoints **@RestController**
+- Use `@RestController` for API endpoints
 - Apply **role-based security** on endpoints
 - Return **DTOs** from all API endpoints
-- Use for database operations **JdbcClient**
+- Use `JdbcClient` for database operations
 - Implement **proper error handling** and logging
+- Return appropriate **HTTP status codes** (201, 204, 409, etc.)
+- Provide **meaningful error messages** in responses
 
 
 ### Database Migrations
@@ -327,26 +353,40 @@ CREATE TABLE IF NOT EXISTS your_table (
 );
 ```
 
+
 ## 🧪 Testing
 
 ### Running Tests
 
-```shell script
+```
 # Run all tests
-./mvnw test
+./mvn test
 
 # Run with coverage
-./mvnw test jacoco:report
+./mvn test jacoco:report
 
 # Run specific test class
-./mvnw test -Dtest=UserServiceTest
+./mvn test -Dtest=UserServiceTest
 ```
+
 
 ### Test Categories
 
 - **Unit Tests** - Service layer testing
-- **Integration Tests** - Full application context
+- **Integration Tests** - Full application context with test data
+    - LoginControllerIntegrationTest
+    - MenuItemControllerIntegrationTest
+    - RestaurantControllerIntegrationTest
+    - UserControllerIntegrationTest
 - **Security Tests** - Authentication & authorization
+- **End to End** - Postman collections
+
+### Test Infrastructure
+- **Test Database**: Uses Testcontainers with PostgreSQL similar to production
+- **Isolation**: Each test class runs in isolation with fresh data
+- **Flyway Migrations**: Applied to test database on startup
+- **Test Data**: Managed via SQL scripts (`test-data.sql`, `cleanup.sql`)
+- **BaseIntegrationTest**: Common test configuration and utilities
 
 ## 🐳 Docker
 
@@ -358,10 +398,9 @@ services:
   postgres:     # PostgreSQL database
 ```
 
-
 ### Docker Commands
 
-```shell script
+```
 # Build and start all services
 docker-compose up -d
 
@@ -375,9 +414,10 @@ docker-compose down
 docker-compose up --build -d
 ```
 
+
 ### Production Deployment
 
-```shell script
+```
 # Build production image
 docker build -t quickbite:latest .
 
@@ -387,6 +427,7 @@ docker run -p 8080:8080 \
   -e SPRING_DATASOURCE_URL=jdbc:postgresql://your-db:5432/quickbite \
   quickbite:latest
 ```
+
 
 ## 🤝 Contributing
 
@@ -432,29 +473,36 @@ If you have any questions or need help, please:
 
 ## 📝 Recent Updates
 
-### Latest Changes (v2.1.0)
+### Latest Changes (v2.2.0)
+- 🛡️ **Enhanced Security**: Updated RBAC - Owners can now delete their own restaurants and menu items
+- ✨ **Improved Error Handling**: Registration now returns proper 409 status for duplicate usernames/emails
+- 🔒 **User Deletion Protection**: Prevents deletion of users who own restaurants with detailed error messages
+- 🧪 **Comprehensive Testing**: Added full integration test suite for all controllers
+- 🔐 **Password Validation**: Enhanced password encoding and validation in update operations
+- 📚 **Better API Documentation**: Updated OpenAPI responses to reflect all possible status codes
+- 🎯 **Error DTOs**: Consistent error response format across all endpoints
+- 🔄 **Data Integrity**: Improved handling of database constraint violations with user-friendly messages
+
+### Previous Updates (v2.1.0)
 - 🐛 **Fixed**: Menu item search now properly returns multiple results
 - ✨ **Enhanced**: Search endpoint supports partial name matching with LIKE queries
-- 🔄 **Refactored**: Complete migration to a DTO pattern for all API endpoints
+- 🔄 **Refactored**: Complete migration to DTO pattern for all API endpoints
 - 🎯 **Improved**: Restaurant endpoints now return DTOs instead of entities
 - 🔍 **Added**: Case-insensitive search functionality for menu items
 - 📚 **Updated**: API documentation to reflect DTO responses
-- 🛡️ **Enhanced**: Better error handling in the repository layer
-- 🧹 **Cleaned**: Removed entity exposure from the API layer
+- 🛡️ **Enhanced**: Better error handling in repository layer
+- 🧹 **Cleaned**: Removed entity exposure from API layer
 
-### Previous Updates (v2.0.0)
-- ✅ Added Restaurant Management system with full CRUD operations
-- ✅ Implemented Menu Item Management with availability tracking
-- ✅ Enhanced role-based access control (USER, OWNER, ADMIN roles)
-- ✅ Migrated from Java 21 to Java 17 for broader compatibility
-- ✅ Improved security configuration with generic PasswordEncoder
-- ✅ Added pagination support for restaurant listings
-- ✅ Enhanced data models with proper relationships
-- ✅ Updated Docker configuration for Java 17
+### Bug Fixes (v2.2.0)
+- Fixed user deletion to check for restaurant ownership
+- Corrected HTTP status codes for conflict scenarios (409)
+- Improved error messages for duplicate username/email registration
+- Enhanced password validation to prevent null/empty passwords
+- Fixed security configuration for restaurant GET endpoints
 
-### Bug Fixes
-- Fixed in menu item search `IncorrectResultSizeDataAccessException`
-- Corrected SQL queries to use proper column names (instead of) `is_available``available`
+### Bug Fixes (v2.1.0)
+- Fixed `IncorrectResultSizeDataAccessException` in menu item search
+- Corrected SQL queries to use proper column names (`is_available` instead of `available`)
 - Improved repository methods to handle multiple results correctly
 
 
