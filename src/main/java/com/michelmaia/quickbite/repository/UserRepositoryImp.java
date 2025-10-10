@@ -297,34 +297,24 @@ public class UserRepositoryImp implements UserRepository {
             }
         }
 
-        // Update the user with a new password
-        if (user.getPassword() != null) {
-            jdbcClient.sql("""
-                                UPDATE users
-                                SET password = :password,
-                                    updated_at = CURRENT_TIMESTAMP
-                                WHERE id = :id
-                            """)
-                    .param("password", user.getPassword())
-                    .param("id", id)
-                    .update();
-        } else {
-            jdbcClient.sql("""
-                                UPDATE users
-                                SET name = :name,
-                                    username = :username,
-                                    email = :email,
-                                    enabled = :enabled,
-                                    updated_at = CURRENT_TIMESTAMP
-                                WHERE id = :id
-                            """)
-                    .param("name", user.getName())
-                    .param("username", user.getUsername())
-                    .param("email", user.getEmail())
-                    .param("enabled", user.getEnabled())
-                    .param("id", id)
-                    .update();
-        }
+        // Update all user fields including password if provided
+        jdbcClient.sql("""
+                    UPDATE users
+                    SET name = :name,
+                        username = :username,
+                        email = :email,
+                        password = :password,
+                        enabled = :enabled,
+                        updated_at = CURRENT_TIMESTAMP
+                    WHERE id = :id
+                """)
+                .param("name", user.getName())
+                .param("username", user.getUsername())
+                .param("email", user.getEmail())
+                .param("password", user.getPassword())
+                .param("enabled", user.getEnabled())
+                .param("id", id)
+                .update();
 
         updateUserRoles(id, user.getRoles());
         return findById(id).orElseThrow();
@@ -333,6 +323,15 @@ public class UserRepositoryImp implements UserRepository {
 
     @Override
     public Integer deleteById(Long id) {
+        // Check if user owns any restaurants
+        Long restaurantCount = jdbcClient.sql("SELECT COUNT(*) FROM restaurants WHERE owner_id = :userId")
+                .param("userId", id)
+                .query(Long.class)
+                .single();
+        
+        if (restaurantCount > 0) {
+            throw new IllegalStateException("Cannot delete user. User owns " + restaurantCount + " restaurant(s)");
+        }
 
         Optional<Long> addressIdOpt = jdbcClient.sql("SELECT address_id FROM users WHERE id = :id")
                 .param("id", id)

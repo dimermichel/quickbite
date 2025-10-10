@@ -30,6 +30,11 @@ public class UserService {
     }
 
     public void registerUser(User user) {
+        // Validate password is provided
+        if (user.getPassword() == null || user.getPassword().trim().isEmpty()) {
+            throw new IllegalArgumentException("Password cannot be null or empty");
+        }
+        
         if (userRepository.existsByUsername(user.getUsername())) {
             throw new IllegalStateException("Username already exists");
         }
@@ -56,6 +61,11 @@ public class UserService {
     }
 
     public void saveUser(User user) {
+        // Validate password is provided
+        if (user.getPassword() == null || user.getPassword().trim().isEmpty()) {
+            throw new IllegalArgumentException("Password cannot be null or empty");
+        }
+        
         user.setPassword(passwordEncoder.encode(user.getPassword()));
         var save = userRepository.save(user);
         if (save == null) {
@@ -83,6 +93,11 @@ public class UserService {
     }
 
     public void updateUser(User user, Long id) {
+        // Encode password if it's being updated
+        if (user.getPassword() != null && !user.getPassword().trim().isEmpty()) {
+            user.setPassword(passwordEncoder.encode(user.getPassword()));
+        }
+        
         var update = userRepository.update(user, id);
         if (update == null) {
             throw new IllegalStateException("User with id " + id + " could not be updated");

@@ -13,6 +13,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -34,14 +35,26 @@ public class UserController {
     @Operation(summary = "Register a new user", description = "**OPEN ROUTE** - Registers a new user with default USER role. Admin role __cannot__ be set during registration.",
             responses = {
                     @ApiResponse(responseCode = "201", description = "User registered successfully"),
-                    @ApiResponse(responseCode = "400", description = "Invalid input data")
+                    @ApiResponse(responseCode = "400", description = "Invalid input data"),
+                    @ApiResponse(responseCode = "409", description = "Username already exists")
             })
     @PostMapping("/register")
-    public ResponseEntity<Void> registerUser(@Valid @RequestBody User user) {
+    public ResponseEntity<?> registerUser(@Valid @RequestBody User user) {
         LOGGER.info("POST -> /api/users/register - Registering new user: {}", user.getUsername());
-        // Set the default role as USER for registration
-        userService.registerUser(user); // This should assign a USER role by default
-        return ResponseEntity.status(201).build();
+        try {
+            userService.registerUser(user);
+            return ResponseEntity.status(201).build();
+        } catch (IllegalStateException e) {
+            LOGGER.warn("POST -> /api/users/register - Username already exists: {}", user.getUsername());
+            return ResponseEntity.status(409).body(new ErrorDTO(e.getMessage()));
+        } catch (DataIntegrityViolationException e) {
+            String message = e.getMessage();
+            LOGGER.warn("POST -> /api/users/register - Data integrity violation: {}", e.getMessage());
+            if (e.getMessage() != null && e.getMessage().contains("users_email_key")) {
+                message = "Email already exists. Please use a different email address.";
+            }
+            return ResponseEntity.status(409).body(new ErrorDTO(message));
+        }
     }
 
     @Operation(summary = "Find all users", description = "Fetches a paginated list of all users, optionally filtered by role ID",
@@ -117,17 +130,27 @@ public class UserController {
     @Operation(summary = "Delete user by ID", description = "Deletes a user by their ID",
             responses = {
                     @ApiResponse(responseCode = "204", description = "User deleted successfully"),
-                    @ApiResponse(responseCode = "404", description = "User not found")
+                    @ApiResponse(responseCode = "404", description = "User not found"),
+                    @ApiResponse(responseCode = "409", description = "Cannot delete user - user owns restaurants")
             })
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteUserById(@Parameter(description = "User Id") @PathVariable Long id) {
+    public ResponseEntity<?> deleteUserById(@Parameter(description = "User Id") @PathVariable Long id) {
         try {
             userService.deleteUserById(id);
-            LOGGER.info("DELETE -> /users/id - Deleting user with ID: {}", id);
+            LOGGER.info("DELETE -> /api/users/id - Deleting user with ID: {}", id);
             return ResponseEntity.noContent().build();
         } catch (IllegalStateException e) {
-            LOGGER.error("DELETE -> /users/id - Error deleting user with ID: {} - {}", id, e.getMessage());
+            LOGGER.error("DELETE -> /api/users/id - Error deleting user with ID: {} - {}", id, e.getMessage());
+            
+            // Check if it's a "user owns restaurants" error or "user not found" error
+            if (e.getMessage().contains("owns") || e.getMessage().contains("restaurant")) {
+                return ResponseEntity.status(HttpStatus.CONFLICT).body(new ErrorDTO(e.getMessage()));
+            }
             return ResponseEntity.notFound().build();
+        } catch (DataIntegrityViolationException e) {
+            LOGGER.error("DELETE -> /api/users/id - Data integrity violation deleting user with ID: {} - {}", id, e.getMessage());
+            return ResponseEntity.status(HttpStatus.CONFLICT)
+                    .body(new ErrorDTO("Cannot delete user. User has associated data (restaurants, etc.)"));
         }
     }
 }
