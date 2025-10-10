@@ -1,9 +1,11 @@
 package com.michelmaia.quickbite.dto;
 
 import com.michelmaia.quickbite.model.Address;
+import lombok.Builder;
 
 import java.time.LocalDateTime;
 
+@Builder
 public record RestaurantDTO(
         Long id,
         Long ownerId,

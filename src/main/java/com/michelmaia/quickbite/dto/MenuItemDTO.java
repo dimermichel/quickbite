@@ -1,7 +1,10 @@
 package com.michelmaia.quickbite.dto;
 
+import lombok.Builder;
+
 import java.time.LocalDateTime;
 
+@Builder
 public record MenuItemDTO(
         Long id,
         Long restaurantId,
