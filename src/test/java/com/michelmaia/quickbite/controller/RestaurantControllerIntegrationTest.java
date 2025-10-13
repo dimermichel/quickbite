@@ -141,7 +141,7 @@ class RestaurantControllerIntegrationTest extends BaseIntegrationTest {
     @Test
     void shouldNotCreateRestaurantWithUserThatDontHaveOwnerOrAdminRole() {
         // Given - Login as regular user
-        LoginRequest loginRequest = new LoginRequest("testuser", "admin");
+        LoginRequest loginRequest = new LoginRequest("testnormaluser", "admin");
         ResponseEntity<LoginResponse> loginResponse = restTemplate.postForEntity(
                 getBaseUrl() + "/api/login",
                 loginRequest,
