@@ -139,6 +139,99 @@ class RestaurantControllerIntegrationTest extends BaseIntegrationTest {
     }
 
     @Test
+    void shouldNotCreateRestaurantWithUserThatDontHaveOwnerOrAdminRole() {
+        // Given - Login as regular user
+        LoginRequest loginRequest = new LoginRequest("testuser", "admin");
+        ResponseEntity<LoginResponse> loginResponse = restTemplate.postForEntity(
+                getBaseUrl() + "/api/login",
+                loginRequest,
+                LoginResponse.class
+        );
+
+        String userAuthToken;
+        if (loginResponse.getStatusCode() == HttpStatus.OK && loginResponse.getBody() != null) {
+            userAuthToken = loginResponse.getBody().token();
+        } else {
+            throw new IllegalStateException("Failed to authenticate test user. Status: " + loginResponse.getStatusCode());
+        }
+
+        var addressRequest = new CreateRestaurantRequest.AddressRequest(
+                "123 Test St",
+                "Test City",
+                "TS",
+                "12345"
+        );
+
+        CreateRestaurantRequest createRequest = new CreateRestaurantRequest(
+                ownerId,
+                "New Test Restaurant",
+                "Italian",
+                addressRequest,
+                "9:00-22:00",
+                4.5,
+                true
+        );
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.setBearerAuth(userAuthToken);
+        HttpEntity<CreateRestaurantRequest> request = new HttpEntity<>(createRequest, headers);
+
+        // When
+        ResponseEntity<String> response = restTemplate.exchange(
+                getBaseUrl() + "/api/restaurants",
+                HttpMethod.POST,
+                request,
+                String.class
+        );
+
+        // Then
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
+    }
+
+    @Test
+    void shouldNotCreateRestaurantWithUserThatDoesNotHaveOwnerOrAdminRole() {
+        // Given - ID of a user without an OWNER or ADMIN role
+        var userId = userRepository.findByUsername("testuser")
+                .orElseThrow(() -> new IllegalStateException("Test user not found"))
+                .getId();
+
+
+        var addressRequest = new CreateRestaurantRequest.AddressRequest(
+                "123 Test St",
+                "Test City",
+                "TS",
+                "12345"
+        );
+
+        CreateRestaurantRequest createRequest = new CreateRestaurantRequest(
+                userId,
+                "New Test Restaurant",
+                "Italian",
+                addressRequest,
+                "9:00-22:00",
+                4.5,
+                true
+        );
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.setBearerAuth(authToken);
+        HttpEntity<CreateRestaurantRequest> request = new HttpEntity<>(createRequest, headers);
+
+        // When
+        ResponseEntity<String> response = restTemplate.exchange(
+                getBaseUrl() + "/api/restaurants",
+                HttpMethod.POST,
+                request,
+                String.class
+        );
+
+        // Then
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
+    }
+
+    @Test
     void shouldNotCreateRestaurantWithoutAuth() {
         // Given
         var addressRequest = new CreateRestaurantRequest.AddressRequest(

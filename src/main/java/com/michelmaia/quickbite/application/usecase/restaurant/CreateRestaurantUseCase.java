@@ -3,7 +3,10 @@ package com.michelmaia.quickbite.application.usecase.restaurant;
 
 import com.michelmaia.quickbite.domain.common.entity.Address;
 import com.michelmaia.quickbite.domain.restaurant.entity.Restaurant;
+import com.michelmaia.quickbite.domain.restaurant.exception.UnauthorizedRestaurantOwnerException;
 import com.michelmaia.quickbite.domain.restaurant.repository.RestaurantRepository;
+import com.michelmaia.quickbite.domain.user.entity.Role;
+import com.michelmaia.quickbite.domain.user.entity.User;
 import com.michelmaia.quickbite.domain.user.exception.UserNotFoundException;
 import com.michelmaia.quickbite.domain.user.repository.UserRepository;
 
@@ -23,8 +26,13 @@ public class CreateRestaurantUseCase {
 
     public Restaurant execute(CreateRestaurantCommand command) {
         // Business rule: Owner must exist
-        userRepository.findById(command.ownerId())
+        User owner = userRepository.findById(command.ownerId())
                 .orElseThrow(() -> new UserNotFoundException("Owner not found with id: " + command.ownerId()));
+
+        // Business rule: Owner must have OWNER or ADMIN role
+        if (!owner.hasRole(Role.OWNER) && !owner.hasRole(Role.ADMIN)) {
+            throw new UnauthorizedRestaurantOwnerException("User does not have permission to own a restaurant. OWNER or ADMIN role required.");
+        }
 
         // Create address
         Address address = new Address(

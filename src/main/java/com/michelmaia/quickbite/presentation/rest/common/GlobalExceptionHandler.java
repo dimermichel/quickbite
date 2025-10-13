@@ -7,6 +7,7 @@ import com.michelmaia.quickbite.domain.menuitem.exception.MenuItemNotFoundExcept
 import com.michelmaia.quickbite.domain.restaurant.exception.InvalidRestaurantDataException;
 import com.michelmaia.quickbite.domain.restaurant.exception.RestaurantNotFoundException;
 import com.michelmaia.quickbite.domain.restaurant.exception.UnauthorizedRestaurantAccessException;
+import com.michelmaia.quickbite.domain.restaurant.exception.UnauthorizedRestaurantOwnerException;
 import com.michelmaia.quickbite.domain.user.exception.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -145,6 +146,14 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(UnauthorizedRestaurantAccessException.class)
     public ResponseEntity<ErrorDTO> handleUnauthorizedRestaurantAccess(UnauthorizedRestaurantAccessException ex) {
         LOGGER.warn("Unauthorized restaurant access: {}", ex.getMessage());
+        return ResponseEntity
+                .status(HttpStatus.FORBIDDEN)
+                .body(new ErrorDTO(ex.getMessage()));
+    }
+
+    @ExceptionHandler(UnauthorizedRestaurantOwnerException.class)
+    public ResponseEntity<ErrorDTO> handleUnauthorizedRestaurantOwnerException(UnauthorizedRestaurantOwnerException ex) {
+        LOGGER.warn("Unauthorized restaurant owner: {}", ex.getMessage());
         return ResponseEntity
                 .status(HttpStatus.FORBIDDEN)
                 .body(new ErrorDTO(ex.getMessage()));
