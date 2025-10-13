@@ -2,7 +2,7 @@
 	"info": {
 		"_postman_id": "c0e476f5-8bd1-4c79-a50e-be7940d25d5b",
 		"name": "QUICKBITE: Tech Challenge FIAP",
-		"description": "### 📋 **Collection Summary**\n\n**QuickBite** is a REST API for user management and authentication built with Spring Boot, featuring JWT-based security and comprehensive user operations.\n\n**Base URL:** `http://localhost:8080` (or your configured server URL)\n\n---\n\n### 🔐 **Authentication**\n\nThe API uses **JWT Bearer Token** authentication for protected endpoints.\n\n**How to authenticate:**\n\n1. Call the `/api/login` endpoint with valid credentials\n    \n2. Copy the returned JWT token\n    \n3. Add it to the `Authorization` header as: `Bearer`\n    \n\n---\n\n### 📂 **API Endpoints Overview**\n\n#### **Authentication Endpoints**\n\n| Method | Endpoint | Description | Auth Required |\n| --- | --- | --- | --- |\n| `POST` | `/api/login` | User authentication | ❌ Open Route |\n| `POST` | `/api/change-password` | Change user password | ❌ Open Route |\n\n#### **User Management Endpoints**\n\n| Method | Endpoint | Description | Auth Required |\n| --- | --- | --- | --- |\n| `POST` | `/api/users/register` | Register new user (USER role) | ❌ Open Route |\n| `GET` | `/api/users` | Get all users (paginated) | ✅ Required |\n| `GET` | `/api/users/{id}` | Get user by ID | ✅ Required |\n| `POST` | `/api/users` | Create new user | ✅ Required |\n| `PUT` | `/api/users/{id}` | Update user by ID | ✅ Required |\n| `DELETE` | `/api/users/{id}` | Delete user by ID | ✅ Required |\n\n---\n\n### 🔧 **Environment Variables**\n\nSet up these variables in your Postman environment:\n\n``` json\n{  \"baseUrl\": \"http://localhost:8080\",  \"jwtToken\": \"{{token_from_login_response}}\",  \"userId\": \"1\"}\n\n ```\n\n---\n\n### 📝 **Request Examples**\n\n#### **1\\. User Login**\n\n``` json\nPOST {{baseUrl}}/api/login\nContent-Type: application/json\n{\n  \"username\": \"your-username\",\n  \"password\": \"your-password\"\n}\n\n ```\n\n**Expected Response:**\n\n``` json\n{  \"token\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...\",  \"username\": \"your-username\"}\n\n ```\n\n#### **2\\. Register New User**\n\n``` json\nPOST {{baseUrl}}/api/users/register\nContent-Type: application/json\n{\n  \"username\": \"newuser\",\n  \"email\": \"newuser@example.com\",\n  \"password\": \"securePassword123\",\n  \"name\": \"New User\"\n}\n\n ```\n\n#### **3\\. Get All Users (Paginated)**\n\n``` bash\nGET {{baseUrl}}/api/users?page=1&size=10&sort=name&roleId=1\nAuthorization: Bearer {{jwtToken}}\n\n ```\n\n#### **4\\. Get User by ID**\n\n```\nGET {{baseUrl}}/api/users/{{userId}}\nAuthorization: Bearer {{jwtToken}}\n\n ```\n\n#### **5\\. Update User**\n\n```\nPUT {{baseUrl}}/api/users/{{userId}}\nAuthorization: Bearer {{jwtToken}}\nContent-Type: application/json\n{\n  \"username\": \"updateduser\",\n  \"email\": \"updated@example.com\",\n  \"name\": \"Updated Name\"\n}\n\n ```\n\n#### **6\\. Delete User**\n\n```\nDELETE {{baseUrl}}/api/users/{{userId}}\nAuthorization: Bearer {{jwtToken}}\n\n ```\n\n#### **7\\. Change Password**\n\n```\nPOST {{baseUrl}}/api/change-password\nContent-Type: application/json\n{\n  \"username\": \"your-username\",\n  \"password\": \"currentPassword\",\n  \"newPassword\": \"newSecurePassword123\"\n}\n\n ```\n\n---\n\n### 📊 **Response Status Codes**\n\n| Status Code | Description |\n| --- | --- |\n| `200` | Success |\n| `201` | Created successfully |\n| `204` | Success (no content) |\n| `400` | Bad Request (validation error) |\n| `401` | Unauthorized (invalid credentials) |\n| `404` | Not Found |\n\n---\n\n### 🚀 **Getting Started**\n\n1. **Import Collection**: Import this collection into Postman\n    \n2. **Set Environment**: Configure the environment variables\n    \n3. **Test Authentication**: Start with the login endpoint\n    \n4. **Explore APIs**: Use the JWT token to access protected endpoints\n    \n\n---\n\n### 💡 **Tips for Testing**\n\n- **Authentication Flow**: Always login first to get the JWT token\n    \n- **Token Management**: The token has an expiration time - re-login when it expires\n    \n- **Pagination**: Use `page` and `size` parameters for user listing\n    \n- **Error Handling**: Check response bodies for detailed error messages\n    \n- **Role-Based Access**: Different endpoints may require different user roles\n    \n\n---\n\n### 🔒 **Security Notes**\n\n- Registration automatically assigns **USER** role (Admin role cannot be set via registration)\n    \n- JWT tokens are required for most operations\n    \n- Password changes require current password verification\n    \n- Email and username must be unique across the system",
+		"description": "### 📋 **Collection Summary**\n\n**QuickBite** is a REST API for user management and authentication built with Spring Boot, featuring JWT-based security and comprehensive user operations.\n\n**Base URL:** `http://localhost:8080` (or your configured server URL)\n\n---\n\n### 🔐 **Authentication**\n\nThe API uses **JWT Bearer Token** authentication for protected endpoints.\n\n**How to authenticate:**\n\n1. Call the `/api/login` endpoint with valid credentials\n    \n2. Copy the returned JWT token\n    \n3. Add it to the `Authorization` header as: `Bearer`\n    \n\n---\n\n### 📂 **API Endpoints Overview**\n\n#### **Authentication Endpoints**\n\n| Method | Endpoint | Description | Auth Required |\n| --- | --- | --- | --- |\n| `POST` | `/api/login` | User authentication | ❌ Open Route |\n| `POST` | `/api/change-password` | Change user password | ❌ Open Route |\n\n---\n\n### 🔧 **Environment Variables**\n\nSet up these variables in your Postman environment:\n\n``` json\n{  \"baseUrl\": \"http://localhost:8080\",  \"token\": \"{{token_from_login_response}}\",  \"id\": \"1\"}\n\n ```\n\n---\n\n### 📝 **Request Examples**\n\n#### **1\\. User Login**\n\n``` json\nPOST {{baseUrl}}/api/login\nContent-Type: application/json\n{\n  \"username\": \"your-username\",\n  \"password\": \"your-password\"\n}\n\n ```\n\n**Expected Response:**\n\n``` json\n{  \"token\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...\",  \"username\": \"your-username\"}\n\n ```\n\n---\n\n### 📊 **Response Status Codes**\n\n| Status Code | Description |\n| --- | --- |\n| `200` | Success |\n| `201` | Created successfully |\n| `204` | Success (no content) |\n| `400` | Bad Request (validation error) |\n| `401` | Unauthorized (invalid credentials) |\n| `404` | Not Found |\n\n---\n\n### 🚀 **Getting Started**\n\n1. **Import Collection**: Import this collection into Postman\n    \n2. **Set Environment**: Configure the environment variables\n    \n3. **Test Authentication**: Start with the login endpoint\n    \n4. **Explore APIs**: Use the JWT token to access protected endpoints\n    \n\n---\n\n### 💡 **Tips for Testing**\n\n- **Authentication Flow**: Always login first to get the JWT token\n    \n- **Token Management**: The token has an expiration time - re-login when it expires\n    \n- **Pagination**: Use `page` and `size` parameters for user listing\n    \n- **Error Handling**: Check response bodies for detailed error messages\n    \n- **Role-Based Access**: Different endpoints may require different user roles\n    \n\n---\n\n### 🔒 **Security Notes**\n\n- Registration automatically assigns **USER** role (Admin role cannot be set via registration)\n    \n- JWT tokens are required for most operations\n    \n- Password changes require current password verification\n    \n- Email and username must be unique across the system",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
 		"_exporter_id": "9067767"
 	},
@@ -63,6 +63,68 @@
 						}
 					},
 					"response": []
+				},
+				{
+					"name": "Revert Password",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"username\": \"admin\",\n  \"password\": \"admin\",\n  \"newPassword\": \"admin123\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/api/change-password",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"change-password"
+							]
+						}
+					},
+					"response": []
+				}
+			],
+			"auth": {
+				"type": "noauth"
+			},
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"type": "text/javascript",
+						"packages": {},
+						"requests": {},
+						"exec": [
+							""
+						]
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"type": "text/javascript",
+						"packages": {},
+						"requests": {},
+						"exec": [
+							"const response = pm.response.json();",
+							"",
+							"if (response.token) {",
+							"    const token = response.token.replace(/^Bearer\\s+/i, '');",
+							"    pm.collectionVariables.set(\"token\", token);",
+							"    console.log(\"Token saved to environment variable:\", token);",
+							"} else {",
+							"    console.warn(\"No token found in response.\");",
+							"}"
+						]
+					}
 				}
 			]
 		},
@@ -193,7 +255,8 @@
 									""
 								],
 								"type": "text/javascript",
-								"packages": {}
+								"packages": {},
+								"requests": {}
 							}
 						}
 					],
@@ -212,7 +275,7 @@
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n  \"name\": \"user\",\n  \"email\": \"user@email.com\",\n  \"username\": \"user\",\n  \"password\": \"user\",\n  \"enabled\": true,\n  \"address\": {\n    \"street\": \"123 Street\",\n    \"city\": \"Orlando\",\n    \"state\": \"FL\",\n    \"zipCode\": \"34787\"\n  }\n}",
+							"raw": "{\n  \"name\": \"user\",\n  \"email\": \"testuser@email.com\",\n  \"username\": \"testuser\",\n  \"password\": \"user\",\n  \"enabled\": true,\n  \"address\": {\n    \"street\": \"123 Street\",\n    \"city\": \"Orlando\",\n    \"state\": \"FL\",\n    \"zipCode\": \"34787\"\n  }\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -251,7 +314,7 @@
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n  \"name\": \"new user\",\n  \"email\": \"newuser@email.com\",\n  \"username\": \"newuser\",\n  \"password\": \"newuser\",\n  \"roles\": [\n    {\n        \"id\": 2\n    },\n    {\n        \"id\": 3\n    }\n  ],\n  \"enabled\": true,\n  \"address\": {\n    \"street\": \"123 User Street\",\n    \"city\": \"Miami\",\n    \"state\": \"FL\",\n    \"zipCode\": \"45879\"\n  }\n}",
+							"raw": "{\n  \"name\": \"new user\",\n  \"email\": \"newtestuser@email.com\",\n  \"username\": \"testnewuser\",\n  \"password\": \"newuser\",\n  \"roleIds\": [1,2],\n  \"enabled\": true,\n  \"address\": {\n    \"street\": \"123 User Street\",\n    \"city\": \"Miami\",\n    \"state\": \"FL\",\n    \"zipCode\": \"45879\"\n  }\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -612,7 +675,7 @@
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n  \"name\": \"new user\",\n  \"email\": \"newuser@email.com\",\n  \"username\": \"newuser\",\n  \"password\": \"newuser\",\n  \"roles\": [\n    {\n        \"id\": 2\n    },\n    {\n        \"id\": 3\n    }\n  ],\n  \"enabled\": true,\n  \"address\": {\n    \"street\": \"123 User Street\",\n    \"city\": \"Miami\",\n    \"state\": \"FL\",\n    \"zipCode\": \"45879\"\n  }\n}",
+							"raw": "{\n  \"ownerId\": 2,\n  \"address\": {\n    \"street\": \"987 Sample Rd\",\n    \"city\": \"Orlando\",\n    \"state\": \"FL\",\n    \"zipCode\": \"34787\"\n  },\n  \"name\": \"Boi Brasil\",\n  \"cuisine\": \"Brazilian\",\n  \"rating\": 4.8,\n  \"openingHours\": \"7:00 AM - 10:00 PM\",\n  \"isOpen\": true\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -620,13 +683,13 @@
 							}
 						},
 						"url": {
-							"raw": "{{base_url}}/api/users",
+							"raw": "{{base_url}}/api/restaurants",
 							"host": [
 								"{{base_url}}"
 							],
 							"path": [
 								"api",
-								"users"
+								"restaurants"
 							]
 						}
 					},
@@ -649,7 +712,7 @@
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n  \"id\": {{id}},  \n  \"ownerId\": 2,\n  \"address\": {\n    \"street\": \"987 Sample Rd\",\n    \"city\": \"Orlando\",\n    \"state\": \"FL\",\n    \"zipCode\": \"34787\"\n  },\n  \"name\": \"Mama Mia\",\n  \"cuisine\": \"Italian\",\n  \"rating\": 4.5,\n  \"openingHours\": \"7:00 AM - 10:00 PM\",\n  \"isOpen\": true\n}",
+							"raw": "{\n  \"ownerId\": 2,\n  \"address\": {\n    \"street\": \"987 Sample Rd\",\n    \"city\": \"Orlando\",\n    \"state\": \"FL\",\n    \"zipCode\": \"34787\"\n  },\n  \"name\": \"Boi Churrascaria\",\n  \"cuisine\": \"Brazilian\",\n  \"rating\": 5.0,\n  \"openingHours\": \"7:00 AM - 10:00 PM\",\n  \"isOpen\": true\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -657,13 +720,14 @@
 							}
 						},
 						"url": {
-							"raw": "{{base_url}}/api/restaurants",
+							"raw": "{{base_url}}/api/restaurants/{{id}}",
 							"host": [
 								"{{base_url}}"
 							],
 							"path": [
 								"api",
-								"restaurants"
+								"restaurants",
+								"{{id}}"
 							]
 						}
 					},
@@ -949,7 +1013,7 @@
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n  \"name\": \"new user\",\n  \"email\": \"newuser@email.com\",\n  \"username\": \"newuser\",\n  \"password\": \"newuser\",\n  \"roles\": [\n    {\n        \"id\": 2\n    },\n    {\n        \"id\": 3\n    }\n  ],\n  \"enabled\": true,\n  \"address\": {\n    \"street\": \"123 User Street\",\n    \"city\": \"Miami\",\n    \"state\": \"FL\",\n    \"zipCode\": \"45879\"\n  }\n}",
+							"raw": "{\n  \"restaurantId\": 1,\n  \"name\": \"Pasta Pomodoro\",\n  \"description\": \"Delicious Pomodoro pasta\",\n  \"price\": 25.0,\n  \"imageUrl\": \"https://images.unsplash.com/photo-1546549032-9571cd6b27df?w=800&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8NHx8cGFzdGF8ZW58MHx8MHx8fDA%3D\",\n  \"isAvailable\": true\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -957,13 +1021,13 @@
 							}
 						},
 						"url": {
-							"raw": "{{base_url}}/api/users",
+							"raw": "{{base_url}}/api/menu-items",
 							"host": [
 								"{{base_url}}"
 							],
 							"path": [
 								"api",
-								"users"
+								"menu-items"
 							]
 						}
 					},
@@ -986,7 +1050,7 @@
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n  \"id\": 2,  \n  \"restaurantId\": 1,\n  \"name\": \"Pasta Alfredo\",\n  \"description\": \"Delicious pasta\",\n  \"price\": 20.0,\n  \"imageUrl\": \"https://images.unsplash.com/photo-1546549032-9571cd6b27df?w=800&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8NHx8cGFzdGF8ZW58MHx8MHx8fDA%3D\",\n  \"isAvailable\": false\n}",
+							"raw": "{\n  \"restaurantId\": 1,\n  \"name\": \"Pasta Spaghetti\",\n  \"description\": \"Delicious Spaghetti\",\n  \"price\": 22.0,\n  \"imageUrl\": \"https://images.unsplash.com/photo-1546549032-9571cd6b27df?w=800&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8NHx8cGFzdGF8ZW58MHx8MHx8fDA%3D\",\n  \"isAvailable\": false\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -994,13 +1058,14 @@
 							}
 						},
 						"url": {
-							"raw": "{{base_url}}/api/menu-items",
+							"raw": "{{base_url}}/api/menu-items/{{id}}",
 							"host": [
 								"{{base_url}}"
 							],
 							"path": [
 								"api",
-								"menu-items"
+								"menu-items",
+								"{{id}}"
 							]
 						}
 					},
@@ -1068,6 +1133,7 @@
 			"listen": "prerequest",
 			"script": {
 				"type": "text/javascript",
+				"requests": {},
 				"exec": [
 					""
 				]
@@ -1077,6 +1143,7 @@
 			"listen": "test",
 			"script": {
 				"type": "text/javascript",
+				"requests": {},
 				"exec": [
 					""
 				]
@@ -1091,6 +1158,10 @@
 		{
 			"key": "base_url",
 			"value": "https://localhost:8080/"
+		},
+		{
+			"key": "token",
+			"value": ""
 		}
 	]
 }
