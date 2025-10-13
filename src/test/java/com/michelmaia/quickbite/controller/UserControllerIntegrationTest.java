@@ -1,15 +1,20 @@
 package com.michelmaia.quickbite.controller;
 
 import com.michelmaia.quickbite.BaseIntegrationTest;
-import com.michelmaia.quickbite.dto.LoginDTO;
-import com.michelmaia.quickbite.dto.SessionDTO;
-import com.michelmaia.quickbite.model.User;
-import com.michelmaia.quickbite.repository.UserRepository;
+import com.michelmaia.quickbite.presentation.rest.auth.dto.LoginRequest;
+import com.michelmaia.quickbite.presentation.rest.auth.dto.LoginResponse;
+import com.michelmaia.quickbite.presentation.rest.user.dto.CreateUserRequest;
+import com.michelmaia.quickbite.presentation.rest.user.dto.UpdateUserRequest;
+import com.michelmaia.quickbite.presentation.rest.user.dto.UserResponse;
+import com.michelmaia.quickbite.domain.user.entity.User;
+import com.michelmaia.quickbite.domain.user.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.*;
 import org.springframework.test.context.jdbc.Sql;
+
+import java.util.List;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 
@@ -24,12 +29,11 @@ class UserControllerIntegrationTest extends BaseIntegrationTest {
 
     @BeforeEach
     void setUp() {
-        // Login to get auth token
-        LoginDTO loginDTO = new LoginDTO("admin", "admin");
-        ResponseEntity<SessionDTO> loginResponse = restTemplate.postForEntity(
+        LoginRequest loginRequest = new LoginRequest("admin", "admin");
+        ResponseEntity<LoginResponse> loginResponse = restTemplate.postForEntity(
                 getBaseUrl() + "/api/login",
-                loginDTO,
-                SessionDTO.class
+                loginRequest,
+                LoginResponse.class
         );
 
         if (loginResponse.getStatusCode() == HttpStatus.OK && loginResponse.getBody() != null) {
@@ -42,32 +46,29 @@ class UserControllerIntegrationTest extends BaseIntegrationTest {
     @Test
     void shouldRegisterUserViaPublicEndpoint() {
         // Given
-        // Use raw JSON to include a password field and avoid serialization issues @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
-        String userJson = """
-                {
-                    "name": "New User",
-                    "email": "newuser@test.com",
-                    "username": "testuser",
-                    "password": "testpassword",
-                    "address": {
-                        "street": "123 Test Street",
-                        "city": "Test City",
-                        "state": "Test State",
-                        "zipCode": "12345"
-                    }
-                }
-                """;
+        CreateUserRequest.AddressRequest address = new CreateUserRequest.AddressRequest(
+                "123 Test Street", "Test City", "Test State", "12345"
+        );
+        CreateUserRequest createRequest = new CreateUserRequest(
+                "New User",
+                "newuser@test.com",
+                "testuser",
+                "testpassword",
+                address,
+                null,
+                null
+        );
 
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
-        HttpEntity<String> request = new HttpEntity<>(userJson, headers);
+        HttpEntity<CreateUserRequest> request = new HttpEntity<>(createRequest, headers);
 
         // When
-        ResponseEntity<Void> response = restTemplate.exchange(
+        ResponseEntity<UserResponse> response = restTemplate.exchange(
                 getBaseUrl() + "/api/users/register",
                 HttpMethod.POST,
                 request,
-                Void.class
+                UserResponse.class
         );
 
         // Then
@@ -78,25 +79,22 @@ class UserControllerIntegrationTest extends BaseIntegrationTest {
     @Test
     void shouldNotRegisterUserWithExistingUsername() {
         // Given
-        // Use raw JSON to include a password field and avoid serialization issues @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
-        String userJson = """
-                {
-                    "name": "New User",
-                    "email": "owner@test.com",
-                    "username": "testowner",
-                    "password": "testpassword",
-                    "address": {
-                        "street": "123 Test Street",
-                        "city": "Test City",
-                        "state": "Test State",
-                        "zipCode": "12345"
-                    }
-                }
-                """;
+        CreateUserRequest.AddressRequest address = new CreateUserRequest.AddressRequest(
+                "123 Test Street", "Test City", "Test State", "12345"
+        );
+        CreateUserRequest createRequest = new CreateUserRequest(
+                "New User",
+                "different@test.com",
+                "testowner", // existing username
+                "testpassword",
+                address,
+                null,
+                null
+        );
 
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
-        HttpEntity<String> request = new HttpEntity<>(userJson, headers);
+        HttpEntity<CreateUserRequest> request = new HttpEntity<>(createRequest, headers);
 
         // When
         ResponseEntity<Void> response = restTemplate.exchange(
@@ -113,25 +111,22 @@ class UserControllerIntegrationTest extends BaseIntegrationTest {
     @Test
     void shouldNotRegisterUserWithExistingEmail() {
         // Given
-        // Use raw JSON to include a password field and avoid serialization issues @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
-        String userJson = """
-                {
-                    "name": "New User",
-                    "email": "owner@test.com",
-                    "username": "newnewuser",
-                    "password": "testpassword",
-                    "address": {
-                        "street": "123 Test Street",
-                        "city": "Test City",
-                        "state": "Test State",
-                        "zipCode": "12345"
-                    }
-                }
-                """;
+        CreateUserRequest.AddressRequest address = new CreateUserRequest.AddressRequest(
+                "123 Test Street", "Test City", "Test State", "12345"
+        );
+        CreateUserRequest createRequest = new CreateUserRequest(
+                "New User",
+                "owner@test.com", // existing email
+                "newnewuser",
+                "testpassword",
+                address,
+                null,
+                null
+        );
 
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
-        HttpEntity<String> request = new HttpEntity<>(userJson, headers);
+        HttpEntity<CreateUserRequest> request = new HttpEntity<>(createRequest, headers);
 
         // When
         ResponseEntity<Void> response = restTemplate.exchange(
@@ -178,17 +173,17 @@ class UserControllerIntegrationTest extends BaseIntegrationTest {
         HttpEntity<?> request = new HttpEntity<>(headers);
 
         // When
-        ResponseEntity<String> response = restTemplate.exchange(
+        ResponseEntity<UserResponse> response = restTemplate.exchange(
                 getBaseUrl() + "/api/users/" + userId,
                 HttpMethod.GET,
                 request,
-                String.class
+                UserResponse.class
         );
 
         // Then
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(response.getBody()).isNotNull();
-        assertThat(response.getBody()).contains("testowner");
+        assertThat(response.getBody().username()).isEqualTo("testowner");
     }
 
     @Test
@@ -197,6 +192,7 @@ class UserControllerIntegrationTest extends BaseIntegrationTest {
         User user = userRepository.findByUsername("testowner").orElseThrow();
         Long userId = user.getId();
         HttpEntity<?> request = new HttpEntity<>(new HttpHeaders());
+
         // When
         ResponseEntity<String> response = restTemplate.exchange(
                 getBaseUrl() + "/api/users/" + userId,
@@ -204,53 +200,44 @@ class UserControllerIntegrationTest extends BaseIntegrationTest {
                 request,
                 String.class
         );
+
         // Then
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
     }
 
     @Test
-    void shouldSaveNewUserWhenAuthenticated() {
+    void shouldCreateNewUserWhenAuthenticated() {
         // Given
-        // Use raw JSON to include a password field and avoid serialization issues @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
-        String userJson = """
-                {
-                  "name": "new user",
-                  "email": "newuser@test.com",
-                  "username": "newuser",
-                  "password": "newuser",
-                  "roles": [
-                    {
-                        "id": 2
-                    },
-                    {
-                        "id": 3
-                    }
-                  ],
-                  "enabled": true,
-                  "address": {
-                    "street": "123 User Street",
-                    "city": "Miami",
-                    "state": "FL",
-                    "zipCode": "45879"
-                  }
-                }
-                """;
+        CreateUserRequest.AddressRequest address = new CreateUserRequest.AddressRequest(
+                "123 User Street", "Miami", "FL", "45879"
+        );
+        CreateUserRequest createRequest = new CreateUserRequest(
+                "new user",
+                "newuser@test.com",
+                "newuser",
+                "newuser",
+                address,
+                List.of(2L, 3L), // roleIds
+                true // enabled
+        );
 
         HttpHeaders headers = new HttpHeaders();
         headers.setBearerAuth(authToken);
         headers.setContentType(MediaType.APPLICATION_JSON);
-        HttpEntity<String> request = new HttpEntity<>(userJson, headers);
+        HttpEntity<CreateUserRequest> request = new HttpEntity<>(createRequest, headers);
 
         // When
-        ResponseEntity<Void> response = restTemplate.exchange(
+        ResponseEntity<UserResponse> response = restTemplate.exchange(
                 getBaseUrl() + "/api/users",
                 HttpMethod.POST,
                 request,
-                Void.class
+                UserResponse.class
         );
 
         // Then
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CREATED);
+        assertThat(response.getBody()).isNotNull();
+        assertThat(response.getBody().username()).isEqualTo("newuser");
     }
 
     @Test
@@ -259,31 +246,21 @@ class UserControllerIntegrationTest extends BaseIntegrationTest {
         User existingUser = userRepository.findByUsername("testowner").orElseThrow();
         Long userId = existingUser.getId();
 
-        // Use raw JSON to include a password field and avoid serialization issues @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
-        String updatedUserJson = """
-                {
-                  "name": "updated owner",
-                  "email": "newemail@test.com",
-                  "username": "testowner",
-                  "password": "owner",
-                  "roles": [
-                        {
-                            "id": 2
-                        }
-                  ],
-                  "enabled": true,
-                  "address": {
-                    "street": "456 Updated Street",
-                    "city": "Updated City",
-                    "state": "Updated State",
-                    "zipCode": "67890"
-                  }
-                }
-                """;
+        UpdateUserRequest.AddressRequest address = new UpdateUserRequest.AddressRequest(
+                "456 Updated Street", "Updated City", "Updated State", "67890"
+        );
+        UpdateUserRequest updateRequest = new UpdateUserRequest(
+                "updated owner",
+                "newemail@test.com",
+                "newpassword", // optional password
+                address
+        );
+
         HttpHeaders headers = new HttpHeaders();
         headers.setBearerAuth(authToken);
         headers.setContentType(MediaType.APPLICATION_JSON);
-        HttpEntity<String> request = new HttpEntity<>(updatedUserJson, headers);
+        HttpEntity<UpdateUserRequest> request = new HttpEntity<>(updateRequest, headers);
+
         // When
         ResponseEntity<Void> response = restTemplate.exchange(
                 getBaseUrl() + "/api/users/" + userId,
@@ -291,11 +268,13 @@ class UserControllerIntegrationTest extends BaseIntegrationTest {
                 request,
                 Void.class
         );
+
         // Then
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NO_CONTENT);
 
         User updatedUser = userRepository.findById(userId).orElseThrow();
         assertThat(updatedUser.getName()).isEqualTo("updated owner");
+        assertThat(updatedUser.getEmail()).isEqualTo("newemail@test.com");
         assertThat(updatedUser.getAddress().getStreet()).isEqualTo("456 Updated Street");
     }
 
@@ -323,30 +302,29 @@ class UserControllerIntegrationTest extends BaseIntegrationTest {
 
     @Test
     void shouldDeleteUserThatHasNoRestaurant() {
-        String userJson = """
-                {
-                    "name": "New User",
-                    "email": "newuser@test.com",
-                    "username": "testuser",
-                    "password": "testpassword",
-                    "address": {
-                        "street": "123 Test Street",
-                        "city": "Test City",
-                        "state": "Test State",
-                        "zipCode": "12345"
-                    }
-                }
-                """;
+        // Given - Create a user first
+        CreateUserRequest.AddressRequest address = new CreateUserRequest.AddressRequest(
+                "123 Test Street", "Test City", "Test State", "12345"
+        );
+        CreateUserRequest createRequest = new CreateUserRequest(
+                "New User",
+                "newuser@test.com",
+                "testuser",
+                "testpassword",
+                address,
+                null,
+                null
+        );
 
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
-        HttpEntity<String> request = new HttpEntity<>(userJson, headers);
+        HttpEntity<CreateUserRequest> request = new HttpEntity<>(createRequest, headers);
 
-        ResponseEntity<Void> createResponse = restTemplate.exchange(
+        ResponseEntity<UserResponse> createResponse = restTemplate.exchange(
                 getBaseUrl() + "/api/users/register",
                 HttpMethod.POST,
                 request,
-                Void.class
+                UserResponse.class
         );
 
         assertThat(createResponse.getStatusCode()).isEqualTo(HttpStatus.CREATED);
@@ -354,19 +332,20 @@ class UserControllerIntegrationTest extends BaseIntegrationTest {
         User user = userRepository.findByUsername("testuser").orElseThrow();
         Long userId = user.getId();
 
+        // When - Delete the user
         headers = new HttpHeaders();
         headers.setBearerAuth(authToken);
         HttpEntity<?> deleteRequest = new HttpEntity<>(headers);
-        // When
+
         ResponseEntity<Void> deleteResponse = restTemplate.exchange(
                 getBaseUrl() + "/api/users/" + userId,
                 HttpMethod.DELETE,
                 deleteRequest,
                 Void.class
         );
+
         // Then
         assertThat(deleteResponse.getStatusCode()).isEqualTo(HttpStatus.NO_CONTENT);
         assertThat(userRepository.findById(userId)).isNotPresent();
     }
 }
-

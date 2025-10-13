@@ -1,10 +1,12 @@
 package com.michelmaia.quickbite.controller;
 
 import com.michelmaia.quickbite.BaseIntegrationTest;
-import com.michelmaia.quickbite.dto.LoginDTO;
-import com.michelmaia.quickbite.dto.MenuItemDTO;
-import com.michelmaia.quickbite.dto.SessionDTO;
-import com.michelmaia.quickbite.repository.UserRepository;
+import com.michelmaia.quickbite.presentation.rest.auth.dto.LoginRequest;
+import com.michelmaia.quickbite.presentation.rest.auth.dto.LoginResponse;
+import com.michelmaia.quickbite.presentation.rest.menuitem.dto.CreateMenuItemRequest;
+import com.michelmaia.quickbite.presentation.rest.menuitem.dto.MenuItemResponse;
+import com.michelmaia.quickbite.presentation.rest.menuitem.dto.UpdateMenuItemRequest;
+import com.michelmaia.quickbite.domain.user.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,11 +26,11 @@ class MenuItemControllerIntegrationTest extends BaseIntegrationTest {
 
     @BeforeEach
     void setUp() {
-        LoginDTO loginDTO = new LoginDTO("testowner", "admin");
-        ResponseEntity<SessionDTO> loginResponse = restTemplate.postForEntity(
+        LoginRequest loginRequest = new LoginRequest("testowner", "admin");
+        ResponseEntity<LoginResponse> loginResponse = restTemplate.postForEntity(
                 getBaseUrl() + "/api/login",
-                loginDTO,
-                SessionDTO.class
+                loginRequest,
+                LoginResponse.class
         );
 
         if (loginResponse.getStatusCode() == HttpStatus.OK && loginResponse.getBody() != null) {
@@ -41,36 +43,125 @@ class MenuItemControllerIntegrationTest extends BaseIntegrationTest {
     @Test
     void shouldCreateMenuItem() {
         // Given
-        MenuItemDTO menuItemDTO = MenuItemDTO.builder()
-                .restaurantId(1L) // Assuming a restaurant with ID 1 exists and belongs to testowner
-                .name("New Test Menu Item")
-                .description("Delicious test item")
-                .price(9.99)
-                .imageUrl("https://image.com")
-                .isAvailable(true)
-                .build();
+        CreateMenuItemRequest createRequest = new CreateMenuItemRequest(
+                1L, // restaurantId
+                "New Test Menu Item",
+                "Delicious test item",
+                9.99,
+                "https://image.com",
+                true
+        );
 
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
         headers.setBearerAuth(authToken);
-        HttpEntity<MenuItemDTO> request = new HttpEntity<>(menuItemDTO, headers);
+        HttpEntity<CreateMenuItemRequest> request = new HttpEntity<>(createRequest, headers);
 
         // When
-        ResponseEntity<Void> response = restTemplate.exchange(
+        ResponseEntity<MenuItemResponse> response = restTemplate.exchange(
                 getBaseUrl() + "/api/menu-items",
                 HttpMethod.POST,
                 request,
-                Void.class
+                MenuItemResponse.class
         );
 
         // Then
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CREATED);
+        assertThat(response.getBody()).isNotNull();
+        assertThat(response.getBody().name()).isEqualTo("New Test Menu Item");
+    }
+
+    @Test
+    void shouldNotCreateMenuItemForNonExistentRestaurant() {
+        // Given
+        CreateMenuItemRequest createRequest = new CreateMenuItemRequest(
+                999L, // Non-existent restaurantId
+                "Invalid Menu Item",
+                "This should fail",
+                9.99,
+                "https://image.com",
+                true
+        );
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.setBearerAuth(authToken);
+        HttpEntity<CreateMenuItemRequest> request = new HttpEntity<>(createRequest, headers);
+
+        // When
+        ResponseEntity<MenuItemResponse> response = restTemplate.exchange(
+                getBaseUrl() + "/api/menu-items",
+                HttpMethod.POST,
+                request,
+                MenuItemResponse.class
+        );
+
+        // Then
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
+    }
+
+    @Test
+    void shouldNotCreateMenuItemWithInvalidData() {
+        // Given
+        CreateMenuItemRequest createRequest = new CreateMenuItemRequest(
+                1L, // Valid restaurantId
+                "", // Invalid name (empty)
+                "This should fail",
+                -5.00, // Invalid price (negative)
+                "https://image.com",
+                true
+        );
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.setBearerAuth(authToken);
+        HttpEntity<CreateMenuItemRequest> request = new HttpEntity<>(createRequest, headers);
+
+        // When
+        ResponseEntity<String> response = restTemplate.exchange(
+                getBaseUrl() + "/api/menu-items",
+                HttpMethod.POST,
+                request,
+                String.class // String to capture error message
+        );
+
+        // Then
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+    }
+
+    @Test
+    void shouldNotCreateMenuItemWithoutAuthentication() {
+        // Given
+        CreateMenuItemRequest createRequest = new CreateMenuItemRequest(
+                1L, // restaurantId
+                "New Test Menu Item",
+                "Delicious test item",
+                9.99,
+                "https://image.com",
+                true
+        );
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        // No auth token set
+        HttpEntity<CreateMenuItemRequest> request = new HttpEntity<>(createRequest, headers);
+
+        // When
+        ResponseEntity<MenuItemResponse> response = restTemplate.exchange(
+                getBaseUrl() + "/api/menu-items",
+                HttpMethod.POST,
+                request,
+                MenuItemResponse.class
+        );
+
+        // Then
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
     }
 
     @Test
     void shouldFindAllAvailableMenuItemsByRestaurant() {
         // Given
-        Long restaurantId = 1L; // Assuming a restaurant with ID 1 exists
+        Long restaurantId = 1L;
         Boolean available = true;
 
         HttpHeaders headers = new HttpHeaders();
@@ -78,11 +169,11 @@ class MenuItemControllerIntegrationTest extends BaseIntegrationTest {
         HttpEntity<Void> request = new HttpEntity<>(headers);
 
         // When
-        ResponseEntity<MenuItemDTO[]> response = restTemplate.exchange(
+        ResponseEntity<MenuItemResponse[]> response = restTemplate.exchange(
                 getBaseUrl() + "/api/menu-items/restaurant/available?available=" + available + "&restaurantId=" + restaurantId,
                 HttpMethod.GET,
                 request,
-                MenuItemDTO[].class
+                MenuItemResponse[].class
         );
 
         // Then
@@ -94,18 +185,18 @@ class MenuItemControllerIntegrationTest extends BaseIntegrationTest {
     @Test
     void shouldFindAllMenuItemsByRestaurant() {
         // Given
-        Long restaurantId = 1L; // Assuming a restaurant with ID 1 exists
+        Long restaurantId = 1L;
 
         HttpHeaders headers = new HttpHeaders();
         headers.setBearerAuth(authToken);
         HttpEntity<Void> request = new HttpEntity<>(headers);
 
         // When
-        ResponseEntity<MenuItemDTO[]> response = restTemplate.exchange(
+        ResponseEntity<MenuItemResponse[]> response = restTemplate.exchange(
                 getBaseUrl() + "/api/menu-items/restaurant?restaurantId=" + restaurantId,
                 HttpMethod.GET,
                 request,
-                MenuItemDTO[].class
+                MenuItemResponse[].class
         );
 
         // Then
@@ -117,18 +208,18 @@ class MenuItemControllerIntegrationTest extends BaseIntegrationTest {
     @Test
     void shouldFindMenuItemById() {
         // Given
-        Long menuItemId = 1L; // Assuming a menu item with ID 1 exists
+        Long menuItemId = 1L;
 
         HttpHeaders headers = new HttpHeaders();
         headers.setBearerAuth(authToken);
         HttpEntity<Void> request = new HttpEntity<>(headers);
 
         // When
-        ResponseEntity<MenuItemDTO> response = restTemplate.exchange(
+        ResponseEntity<MenuItemResponse> response = restTemplate.exchange(
                 getBaseUrl() + "/api/menu-items/" + menuItemId,
                 HttpMethod.GET,
                 request,
-                MenuItemDTO.class
+                MenuItemResponse.class
         );
 
         // Then
@@ -138,21 +229,42 @@ class MenuItemControllerIntegrationTest extends BaseIntegrationTest {
     }
 
     @Test
-    void shouldFindMenuItemsByNameAndRestaurant() {
+    void shouldNotFindMenuItemByInvalidId() {
         // Given
-        Long restaurantId = 1L; // Assuming a restaurant with ID 1 exists
-        String name = "Pizza"; // Assuming there are menu items with "Pizza" in the name
+        Long invalidMenuItemId = 999L;
 
         HttpHeaders headers = new HttpHeaders();
         headers.setBearerAuth(authToken);
         HttpEntity<Void> request = new HttpEntity<>(headers);
 
         // When
-        ResponseEntity<MenuItemDTO[]> response = restTemplate.exchange(
+        ResponseEntity<MenuItemResponse> response = restTemplate.exchange(
+                getBaseUrl() + "/api/menu-items/" + invalidMenuItemId,
+                HttpMethod.GET,
+                request,
+                MenuItemResponse.class
+        );
+
+        // Then
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
+    }
+
+    @Test
+    void shouldFindMenuItemsByNameAndRestaurant() {
+        // Given
+        Long restaurantId = 1L;
+        String name = "Pizza";
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setBearerAuth(authToken);
+        HttpEntity<Void> request = new HttpEntity<>(headers);
+
+        // When
+        ResponseEntity<MenuItemResponse[]> response = restTemplate.exchange(
                 getBaseUrl() + "/api/menu-items/restaurant/search?name=" + name + "&restaurantId=" + restaurantId,
                 HttpMethod.GET,
                 request,
-                MenuItemDTO[].class
+                MenuItemResponse[].class
         );
 
         // Then
@@ -164,32 +276,32 @@ class MenuItemControllerIntegrationTest extends BaseIntegrationTest {
     @Test
     void shouldUpdateMenuItem() {
         // Given
-        Long menuItemId = 1L; // Assuming a menu item with ID 1 exists
-        MenuItemDTO menuItemDTO = MenuItemDTO.builder()
-                .id(menuItemId)
-                .restaurantId(1L) // Assuming a restaurant with ID 1 exists and belongs to testowner
-                .name("Updated Test Menu Item")
-                .description("Updated description")
-                .price(12.99)
-                .imageUrl("https://updated-image.com")
-                .isAvailable(false)
-                .build();
+        Long menuItemId = 1L;
+        UpdateMenuItemRequest updateRequest = new UpdateMenuItemRequest(
+                "Updated Test Menu Item",
+                "Updated description",
+                12.99,
+                "https://updated-image.com",
+                false
+        );
 
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
         headers.setBearerAuth(authToken);
-        HttpEntity<MenuItemDTO> request = new HttpEntity<>(menuItemDTO, headers);
+        HttpEntity<UpdateMenuItemRequest> request = new HttpEntity<>(updateRequest, headers);
 
         // When
-        ResponseEntity<Void> response = restTemplate.exchange(
-                getBaseUrl() + "/api/menu-items",
+        ResponseEntity<MenuItemResponse> response = restTemplate.exchange(
+                getBaseUrl() + "/api/menu-items/" + menuItemId,
                 HttpMethod.PUT,
                 request,
-                Void.class
+                MenuItemResponse.class
         );
 
         // Then
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NO_CONTENT);
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(response.getBody()).isNotNull();
+        assertThat(response.getBody().name()).isEqualTo("Updated Test Menu Item");
     }
 
     @Test

@@ -1,9 +1,9 @@
 package com.michelmaia.quickbite.controller;
 
 import com.michelmaia.quickbite.BaseIntegrationTest;
-import com.michelmaia.quickbite.dto.ChangePasswordDTO;
-import com.michelmaia.quickbite.dto.LoginDTO;
-import com.michelmaia.quickbite.dto.SessionDTO;
+import com.michelmaia.quickbite.presentation.rest.auth.dto.ChangePasswordRequest;
+import com.michelmaia.quickbite.presentation.rest.auth.dto.LoginRequest;
+import com.michelmaia.quickbite.presentation.rest.auth.dto.LoginResponse;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.*;
 import org.springframework.test.context.jdbc.Sql;
@@ -17,12 +17,12 @@ class LoginControllerIntegrationTest extends BaseIntegrationTest {
     @Test
     void shouldLoginSuccessfully() {
         // Given
-        LoginDTO loginDTO = new LoginDTO("testowner", "admin");
+        LoginRequest loginRequest = new LoginRequest("testowner", "admin");
         // When
-        ResponseEntity<SessionDTO> loginResponse = restTemplate.postForEntity(
+        ResponseEntity<LoginResponse> loginResponse = restTemplate.postForEntity(
                 getBaseUrl() + "/api/login",
-                loginDTO,
-                SessionDTO.class
+                loginRequest,
+                LoginResponse.class
         );
         // Then
         assertThat(loginResponse.getStatusCode()).isEqualTo(HttpStatus.OK);
@@ -33,12 +33,12 @@ class LoginControllerIntegrationTest extends BaseIntegrationTest {
     @Test
     void shouldNotLoginWithWrongPassword() {
         // Given
-        LoginDTO loginDTO = new LoginDTO("testowner", "wrongpassword");
+        LoginRequest loginRequest = new LoginRequest("testowner", "wrongpassword");
         // When
-        ResponseEntity<SessionDTO> loginResponse = restTemplate.postForEntity(
+        ResponseEntity<LoginResponse> loginResponse = restTemplate.postForEntity(
                 getBaseUrl() + "/api/login",
-                loginDTO,
-                SessionDTO.class
+                loginRequest,
+                LoginResponse.class
         );
         // Then
         assertThat(loginResponse.getStatusCode().is4xxClientError()).isTrue();
@@ -47,12 +47,12 @@ class LoginControllerIntegrationTest extends BaseIntegrationTest {
     @Test
     void shouldNotLoginWithNonExistentUser() {
         // Given
-        LoginDTO loginDTO = new LoginDTO("nonexistentuser", "somepassword");
+        LoginRequest loginRequest = new LoginRequest("nonexistentuser", "somepassword");
         // When
-        ResponseEntity<SessionDTO> loginResponse = restTemplate.postForEntity(
+        ResponseEntity<LoginResponse> loginResponse = restTemplate.postForEntity(
                 getBaseUrl() + "/api/login",
-                loginDTO,
-                SessionDTO.class
+                loginRequest,
+                LoginResponse.class
         );
         // Then
         assertThat(loginResponse.getStatusCode().is4xxClientError()).isTrue();
@@ -61,22 +61,22 @@ class LoginControllerIntegrationTest extends BaseIntegrationTest {
     @Test
     void shouldChangePasswordSuccessfully() {
         // Given
-        LoginDTO loginDTO = new LoginDTO("testowner", "admin");
-        ResponseEntity<SessionDTO> loginResponse = restTemplate.postForEntity(
+        LoginRequest loginRequest = new LoginRequest("testowner", "admin");
+        ResponseEntity<LoginResponse> loginResponse = restTemplate.postForEntity(
                 getBaseUrl() + "/api/login",
-                loginDTO,
-                SessionDTO.class
+                loginRequest,
+                LoginResponse.class
         );
 
         assertThat(loginResponse.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(loginResponse.getBody()).isNotNull();
         String authToken = loginResponse.getBody().token();
 
-        ChangePasswordDTO changePasswordDTO = new ChangePasswordDTO("testowner", "admin", "newadmin");
+        ChangePasswordRequest changePasswordRequest = new ChangePasswordRequest("testowner", "admin", "newadmin");
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
         headers.setBearerAuth(authToken);
-        HttpEntity<ChangePasswordDTO> request = new HttpEntity<>(changePasswordDTO, headers);
+        HttpEntity<ChangePasswordRequest> request = new HttpEntity<>(changePasswordRequest, headers);
 
         // When
         ResponseEntity<Void> changePasswordResponse = restTemplate.exchange(
@@ -90,11 +90,11 @@ class LoginControllerIntegrationTest extends BaseIntegrationTest {
         assertThat(changePasswordResponse.getStatusCode()).isEqualTo(HttpStatus.OK);
 
         // Verify that the user can log in with the new password
-        LoginDTO newLoginDTO = new LoginDTO("testowner", "newadmin");
-        ResponseEntity<SessionDTO> newLoginResponse = restTemplate.postForEntity(
+        LoginRequest newLoginRequest = new LoginRequest("testowner", "newadmin");
+        ResponseEntity<LoginResponse> newLoginResponse = restTemplate.postForEntity(
                 getBaseUrl() + "/api/login",
-                newLoginDTO,
-                SessionDTO.class
+                newLoginRequest,
+                LoginResponse.class
         );
 
         assertThat(newLoginResponse.getStatusCode()).isEqualTo(HttpStatus.OK);
@@ -105,22 +105,22 @@ class LoginControllerIntegrationTest extends BaseIntegrationTest {
     @Test
     void shouldNotChangePasswordWithWrongCurrentPasswordAuthenticated() {
         // Given
-        LoginDTO loginDTO = new LoginDTO("testowner", "admin");
-        ResponseEntity<SessionDTO> loginResponse = restTemplate.postForEntity(
+        LoginRequest loginRequest = new LoginRequest("testowner", "admin");
+        ResponseEntity<LoginResponse> loginResponse = restTemplate.postForEntity(
                 getBaseUrl() + "/api/login",
-                loginDTO,
-                SessionDTO.class
+                loginRequest,
+                LoginResponse.class
         );
 
         assertThat(loginResponse.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(loginResponse.getBody()).isNotNull();
         String authToken = loginResponse.getBody().token();
 
-        ChangePasswordDTO changePasswordDTO = new ChangePasswordDTO("testowner", "wrongpassword", "newadmin");
+        ChangePasswordRequest changePasswordRequest = new ChangePasswordRequest("testowner", "wrongpassword", "newadmin");
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
         headers.setBearerAuth(authToken);
-        HttpEntity<ChangePasswordDTO> request = new HttpEntity<>(changePasswordDTO, headers);
+        HttpEntity<ChangePasswordRequest> request = new HttpEntity<>(changePasswordRequest, headers);
 
         // When
         ResponseEntity<Void> changePasswordResponse = restTemplate.exchange(
@@ -137,10 +137,10 @@ class LoginControllerIntegrationTest extends BaseIntegrationTest {
     @Test
     void shouldNotChangePasswordWithWrongCurrentPasswordUnauthenticated() {
         // Given
-        ChangePasswordDTO changePasswordDTO = new ChangePasswordDTO("testowner", "wrongpassword", "newadmin");
+        ChangePasswordRequest changePasswordRequest = new ChangePasswordRequest("testowner", "wrongpassword", "newadmin");
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
-        HttpEntity<ChangePasswordDTO> request = new HttpEntity<>(changePasswordDTO, headers);
+        HttpEntity<ChangePasswordRequest> request = new HttpEntity<>(changePasswordRequest, headers);
 
         // When
         ResponseEntity<Void> changePasswordResponse = restTemplate.exchange(

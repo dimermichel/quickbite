@@ -1,12 +1,14 @@
-# 🍕 QuickBite
+
+#  QuickBite
 
 > **FIAP 2025 - Java Tech Challenge**
+>
+> A modern Spring Boot application for food service management following **Clean Architecture** principles with JWT authentication, PostgreSQL database, and Docker containerization.
 
-A modern Spring Boot application for food service management with JWT authentication, PostgreSQL database, and Docker containerization.
-
-## 📋 Table of Contents
+##  Table of Contents
 
 - [Features](#-features)
+- [Architecture](#-architecture)
 - [Tech Stack](#-tech-stack)
 - [Quick Start](#-quick-start)
 - [Installation](#-installation)
@@ -15,26 +17,62 @@ A modern Spring Boot application for food service management with JWT authentica
 - [Development](#-development)
 - [Testing](#-testing)
 - [Docker](#-docker)
+- [Clean Architecture](#-clean-architecture)
 - [Contributing](#-contributing)
 - [License](#-license)
 
 ## ✨ Features
 
-- 🔐 **JWT Authentication** - Secure token-based authentication
-- 🛡️ **Spring Security** - Comprehensive security configuration with role-based access control
-- 👥 **User Management** - Complete user CRUD operations with pagination and enhanced error handling
-- 🏪 **Restaurant Management** - Create and manage restaurant profiles with DTOs
-- 🍽️ **Menu Management** - Full menu item management with availability tracking and search functionality
-- 🔍 **Advanced Search** - Search menu items by name with partial matching (case-insensitive LIKE queries)
-- 🐘 **PostgreSQL** - Robust database with Flyway migrations
-- 📚 **OpenAPI Documentation** - Interactive Swagger UI
-- 🐳 **Docker Ready** - Complete containerization setup
+-  **Clean Architecture** - Domain-centric design with clear separation of concerns
+-  **Use Case Pattern** - Single responsibility for each business operation
+-  **JWT Authentication** - Secure token-based authentication
+- ️ **Spring Security** - Comprehensive security configuration with role-based access control
+-  **User Management** - Complete user CRUD operations with pagination and enhanced error handling
+-  **Restaurant Management** - Create and manage restaurant profiles with full CRUD operations
+- ️ **Menu Management** - Full menu item management with availability tracking and search functionality
+-  **Advanced Search** - Search menu items by name with partial matching (case-insensitive LIKE queries)
+-  **PostgreSQL** - Robust database with Flyway migrations
+-  **OpenAPI Documentation** - Interactive Swagger UI
+-  **Docker Ready** - Complete containerization setup
 - ✅ **Input Validation** - Comprehensive request validation with proper error responses
-- 🔄 **Hot Reload** - Development productivity tools
-- 🎯 **DTO Pattern** - Clean separation between entities and API responses
-- 🚨 **Enhanced Error Handling** - Detailed error messages and HTTP status codes for better debugging
+-  **Hot Reload** - Development productivity tools
+-  **Domain-Driven Design** - Pure domain entities with business logic
+-  **Enhanced Error Handling** - Global exception handling with meaningful messages
 
-## 🛠 Tech Stack
+##  Architecture
+
+This application follows **Clean Architecture** principles, ensuring:
+- ✅ **Independence of Frameworks** - Business logic doesn't depend on Spring
+- ✅ **Testability** - Business rules can be tested without UI, database, or external elements
+- ✅ **Independence of UI** - Easy to swap presentation layers
+- ✅ **Independence of Database** - Business rules are not bound to the database
+- ✅ **Independence of External Agencies** - Business rules don't know about the outside world
+
+### Architecture Layers
+
+```
+┌─────────────────────────────────────────────────────────┐
+│                   Presentation Layer                     │
+│              (REST Controllers, DTOs)                    │
+└────────────────────┬────────────────────────────────────┘
+                     │
+┌────────────────────▼────────────────────────────────────┐
+│                  Application Layer                       │
+│        (Use Cases, Application Services)                 │
+└────────────────────┬────────────────────────────────────┘
+                     │
+┌────────────────────▼────────────────────────────────────┐
+│                    Domain Layer                          │
+│     (Entities, Business Rules, Repository Interfaces)    │
+└────────────────────┬────────────────────────────────────┘
+                     │
+┌────────────────────▼────────────────────────────────────┐
+│                 Infrastructure Layer                     │
+│    (Repository Implementations, Security, Config)        │
+└─────────────────────────────────────────────────────────┘
+```
+
+##  Tech Stack
 
 ### Backend
 - **Java 17** - Programming language
@@ -42,7 +80,7 @@ A modern Spring Boot application for food service management with JWT authentica
 - **Spring Security** - Authentication & authorization
 - **Spring Web** - REST API development
 - **Spring JDBC** - Database connectivity with JdbcClient
-- - **JDBC** instead of **JPA** for better control over SQL queries and performance.
+- **JDBC** instead of **JPA** - Better control over SQL queries and performance
 
 ### Database
 - **PostgreSQL 15.3** - Primary database
@@ -56,11 +94,10 @@ A modern Spring Boot application for food service management with JWT authentica
 - **SpringDoc OpenAPI 3** - API documentation
 
 ### Development Tools
-- **Lombok** - Boilerplate code reduction
-- **Spring Boot DevTools** - Development productivity
 - **Maven** - Build automation
+- **Docker** - Containerization
 
-## 🚀 Quick Start
+##  Quick Start
 
 ### Using Docker Compose (Recommended)
 ```bash
@@ -74,6 +111,7 @@ docker-compose up -d
 # Access the application
 open http://localhost:8080
 ```
+
 ### Local Development
 ```bash
 # Prerequisites: Java 17+, Maven 3.6+, PostgreSQL
@@ -83,12 +121,13 @@ git clone https://github.com/dimermichel/quickbite.git
 cd quickbite
 
 # Build the project
-./mvnw clean compile
+./mvn clean compile
 
 # Run the application
-./mvnw spring-boot:run
+./mvn spring-boot:run
 ```
-## 📦 Installation
+
+##  Installation
 
 ### Prerequisites
 
@@ -114,10 +153,10 @@ cd quickbite
 
 3. **Build the project:**
    ```bash
-   ./mvnw clean install
+   ./mvn clean install
    ```
 
-## 🎯 Usage
+##  Usage
 
 ### Starting the Application
 
@@ -125,9 +164,10 @@ cd quickbite
 ```bash
 docker-compose up -d
 ```
+
 **Local Development:**
 ```bash
-./mvnw spring-boot:run
+./mvn spring-boot:run
 ```
 
 ### Application URLs
@@ -151,7 +191,7 @@ The application comes with a pre-configured admin user:
 - **Password**: admin
 - **Role**: ADMIN
 
-## 📖 API Documentation
+##  API Documentation
 
 The application includes comprehensive API documentation using OpenAPI 3.0.
 
@@ -160,21 +200,19 @@ The application includes comprehensive API documentation using OpenAPI 3.0.
 
 ### API Modules
 
-#### 🔐 Authentication
+####  Authentication
 ```
 # Login
-POST /api/auth/login
+POST /api/login
+
+# Change Password
+POST /api/change-password
 
 # Register (Open Route)
-POST /api/auth/register
-# - Returns 201: User registered successfully
-# - Returns 400: Invalid input data
-# - Returns 409: Username or email already exists
+POST /api/users/register
 ```
 
-
-
-#### 👥 User Management
+####  User Management
 ```
 # Get all users (paginated)
 GET /api/users
@@ -185,17 +223,14 @@ GET /api/users/{id}
 # Create user (Admin only)
 POST /api/users
 
-# Update user (includes password encryption)
+# Update user
 PUT /api/users/{id}
 
 # Delete user (Admin only)
 DELETE /api/users/{id}
-# - Returns 204: User deleted successfully
-# - Returns 404: User not found
-# - Returns 409: Cannot delete - user owns restaurants
 ```
 
-#### 🏪 Restaurant Management
+####  Restaurant Management
 ```
 # Get all restaurants (paginated)
 GET /api/restaurants
@@ -219,9 +254,7 @@ PUT /api/restaurants/{id}
 DELETE /api/restaurants/{id}
 ```
 
-
-
-#### 🍽️ Menu Item Management
+#### ️ Menu Item Management
 ```
 # Get menu item by ID
 GET /api/menu-items/{id}
@@ -245,61 +278,108 @@ PUT /api/menu-items/{id}
 DELETE /api/menu-items/{id}
 ```
 
-### Search Functionality
-The menu item search endpoint (`/api/menu-items/restaurant/search`) supports:
-- **Partial matching** - Search for "burger" finds "Cheeseburger", "Hamburger", etc.
-- **Case-insensitive** - Works with any letter case
-- **Multiple results** - Returns all matching items as a list
-- **Restaurant filtering** - Scoped to a specific restaurant
-
-
 ### Role-Based Access Control
 
-The application implements three user roles with refined permissions:
+The application implements three user roles:
 
 - **USER** - Can view restaurants and menu items
 - **OWNER** - Can create, update, and delete their own restaurants and menu items
 - **ADMIN** - Full access to all endpoints including user management
 
-#### Updated Permissions (v2.2.0)
-- Restaurant owners can now delete their own restaurants
-- Menu item owners can delete their own menu items
-- All users can view individual restaurant details
+##  Development
 
-## 🔧 Development
-
-### Project Structure
+### Project Structure (Clean Architecture)
 
 ```
-src/
-├── main/
-│   ├── java/com/michelmaia/quickbite/
-│   │   ├── config/          # Configuration classes
-│   │   ├── controller/      # REST controllers
-│   │   ├── service/         # Business logic
-│   │   ├── repository/      # Data access layer
-│   │   ├── model/           # Entity models
-│   │   ├── dto/             # Data transfer objects
-│   │   ├── mapper/          # Row mappers for JDBC
-│   │   └── security/        # Security configuration
-│   └── resources/
-│       ├── db/migration/    # Flyway migration scripts
-│       │   ├── V1__create-initial-schemas.sql
-│       │   └── V2__create-restaurant-menu-schemas.sql
-│       └── application.yml  # Application configuration
-└── test/                    # Test classes
-├── controller/          # Integration tests
-│   ├── LoginControllerIntegrationTest
-│   ├── MenuItemControllerIntegrationTest
-│   ├── RestaurantControllerIntegrationTest
-│   └── UserControllerIntegrationTest
-└── resources/
-├── application-test.properties
-├── cleanup.sql
-└── test-data.sql
+src/main/java/com/michelmaia/quickbite/
+├── domain/                           # Business Logic (Framework-Independent)
+│   ├── user/
+│   │   ├── entity/                   # User, Role (Pure domain entities)
+│   │   ├── repository/               # UserRepository interface
+│   │   └── exception/                # Domain exceptions
+│   ├── restaurant/
+│   │   ├── entity/                   # Restaurant entity
+│   │   ├── repository/               # RestaurantRepository interface
+│   │   └── exception/                # Restaurant exceptions
+│   ├── menuitem/
+│   │   ├── entity/                   # MenuItem entity
+│   │   ├── repository/               # MenuItemRepository interface
+│   │   └── exception/                # MenuItem exceptions
+│   ├── auth/
+│   │   └── exception/                # Authentication exceptions
+│   └── common/
+│       └── entity/                   # Shared entities (Address)
+│
+├── application/                      # Use Cases & Application Services
+│   ├── usecase/
+│   │   ├── user/                     # User use cases
+│   │   │   ├── RegisterUserUseCase
+│   │   │   ├── CreateUserUseCase
+│   │   │   ├── GetUserUseCase
+│   │   │   ├── ListUsersUseCase
+│   │   │   ├── UpdateUserUseCase
+│   │   │   └── DeleteUserUseCase
+│   │   ├── auth/                     # Auth use cases
+│   │   │   ├── LoginUseCase
+│   │   │   └── ChangePasswordUseCase
+│   │   ├── restaurant/               # Restaurant use cases
+│   │   │   ├── CreateRestaurantUseCase
+│   │   │   ├── GetRestaurantUseCase
+│   │   │   ├── ListRestaurantsUseCase
+│   │   │   ├── UpdateRestaurantUseCase
+│   │   │   └── DeleteRestaurantUseCase
+│   │   └── menuitem/                 # MenuItem use cases
+│   │       ├── CreateMenuItemUseCase
+│   │       ├── GetMenuItemUseCase
+│   │       ├── ListMenuItemsUseCase
+│   │       ├── UpdateMenuItemUseCase
+│   │       └── DeleteMenuItemUseCase
+│   ├── service/                      # Application service interfaces
+│   │   ├── PasswordEncoder
+│   │   └── TokenGenerator
+│   └── dto/                          # Shared DTOs
+│       └── PageResponseDTO
+│
+├── infrastructure/                   # External Concerns
+│   ├── persistence/                  # Repository implementations
+│   │   ├── user/
+│   │   │   ├── UserRepositoryAdapter
+│   │   │   └── UserJdbcMapper
+│   │   ├── restaurant/
+│   │   │   ├── RestaurantRepositoryAdapter
+│   │   │   └── RestaurantJdbcMapper
+│   │   └── menuitem/
+│   │       ├── MenuItemRepositoryAdapter
+│   │       └── MenuItemJdbcMapper
+│   ├── security/                     # Security adapters
+│   │   ├── PasswordEncoderAdapter
+│   │   ├── TokenGeneratorAdapter
+│   │   ├── JWTCreator
+│   │   ├── JWTFilter
+│   │   ├── SecurityConfig
+│   │   └── WebSecurityConfig
+│   └── config/                       # Configuration
+│       ├── UseCaseConfig
+│       └── OpenAPIConfig
+│
+└── presentation/                     # External Interfaces
+    └── rest/                         # REST API
+        ├── user/
+        │   ├── UserController
+        │   └── dto/                  # User DTOs
+        ├── auth/
+        │   ├── AuthController
+        │   └── dto/                  # Auth DTOs
+        ├── restaurant/
+        │   ├── RestaurantController
+        │   └── dto/                  # Restaurant DTOs
+        ├── menuitem/
+        │   ├── MenuItemController
+        │   └── dto/                  # MenuItem DTOs
+        └── common/
+            ├── GlobalExceptionHandler
+            └── ErrorDTO
 ```
-
-
 
 ### Database Schema
 
@@ -313,52 +393,116 @@ src/
 - **restaurants** - Restaurant profiles with owner and address
 - **menu_items** - Menu items linked to restaurants
 
-### Architecture Patterns
-#### DTO (Data Transfer Object) Pattern
-The application uses DTOs to separate the API layer from the database entities:
-- **Benefits**: Security, flexibility, and cleaner API contracts
-- **Implementation**: All API endpoints return DTOs instead of entity models
-- **Mapping**: Custom mappers convert entities to DTOs in repositories
+### Clean Architecture Principles
 
-#### Repository Pattern
-- **Interface-based design** - Clean contracts for data access
-- **JdbcClient usage** - Modern Spring JDBC approach
-- **SQL queries** - Explicit SQL for transparency and performance
-- **Error handling** - Proper exception handling for database operations
+#### 1. Domain Layer (Business Logic)
+- **Pure Java** - No framework dependencies
+- **Entities** - Encapsulate business rules and validations
+- **Repository Interfaces** - Defined by domain needs
+- **Exceptions** - Domain-specific exceptions
 
+**Example:**
+```java
+// Domain Entity - Pure business logic
+public class Restaurant {
+    private final Long id;
+    private String name;
+    
+    private Restaurant(...) {
+        validate();
+    }
+    
+    private void validate() {
+        if (name == null || name.trim().isEmpty()) {
+            throw new InvalidRestaurantDataException("Name cannot be empty");
+        }
+    }
+    
+    public void updateInfo(String name, ...) {
+        this.name = name;
+        validate();
+    }
+}
+```
+
+#### 2. Application Layer (Use Cases)
+- **Single Responsibility** - Each use case does ONE thing
+- **Orchestration** - Coordinates domain entities and repositories
+- **Business Workflows** - Implements application-specific business rules
+
+**Example:**
+```java
+public class CreateRestaurantUseCase {
+    private final RestaurantRepository restaurantRepository;
+    private final UserRepository userRepository;
+    
+    public Restaurant execute(CreateRestaurantCommand command) {
+        // Verify owner exists
+        userRepository.findById(command.ownerId())
+            .orElseThrow(() -> new UserNotFoundException(...));
+        
+        // Create domain entity
+        Restaurant restaurant = Restaurant.createNew(...);
+        
+        // Persist
+        return restaurantRepository.save(restaurant);
+    }
+}
+```
+
+#### 3. Infrastructure Layer (Technical Details)
+- **Repository Implementations** - JDBC, JPA, etc.
+- **External Services** - JWT, password encoding
+- **Framework Configuration** - Spring beans, security
+
+**Example:**
+```java
+@Repository
+public class RestaurantRepositoryAdapter implements RestaurantRepository {
+    private final JdbcClient jdbcClient;
+    
+    @Override
+    public Restaurant save(Restaurant restaurant) {
+        // JDBC implementation details
+        // Maps domain entity to database
+    }
+}
+```
+
+#### 4. Presentation Layer (External Interfaces)
+- **Controllers** - Thin layer, delegates to use cases
+- **DTOs** - Request/Response models
+- **Exception Handling** - Converts domain exceptions to HTTP responses
+
+**Example:**
+```java
+@RestController
+public class RestaurantController {
+    private final CreateRestaurantUseCase createRestaurantUseCase;
+    
+    @PostMapping("/api/restaurants")
+    public ResponseEntity<RestaurantResponse> create(@Valid @RequestBody CreateRestaurantRequest request) {
+        var command = new CreateRestaurantUseCase.CreateRestaurantCommand(...);
+        Restaurant restaurant = createRestaurantUseCase.execute(command);
+        return ResponseEntity.ok(RestaurantResponse.fromDomain(restaurant));
+    }
+}
+```
 
 ### Code Style
 
-- Use **Lombok** annotations to reduce boilerplate
-- Follow **Spring Boot** best practices
-- Implement proper **validation** on DTOs
-- Use `@RestController` for API endpoints
-- Apply **role-based security** on endpoints
-- Return **DTOs** from all API endpoints
-- Use `JdbcClient` for database operations
-- Implement **proper error handling** and logging
-- Return appropriate **HTTP status codes** (201, 204, 409, etc.)
-- Provide **meaningful error messages** in responses
+- **Domain Entities** - No framework annotations, pure Java
+- **Use Cases** - Constructor injection, immutable commands
+- **Repository Adapters** - Implement domain interfaces
+- **Controllers** - Thin, validation only
+- **DTOs** - Java records for immutability
+- **Exception Handling** - Global exception handler
 
-
-### Database Migrations
-
-Create new migration files in `src/main/resources/db/migration/`:
-
-```sql
--- V3__your-migration-name.sql
-CREATE TABLE IF NOT EXISTS your_table (
-    id BIGSERIAL PRIMARY KEY,
-    -- your columns
-);
-```
-
-
-## 🧪 Testing
+##  Testing
 
 ### Running Tests
 
-```
+```bash
 # Run all tests
 ./mvn test
 
@@ -366,29 +510,26 @@ CREATE TABLE IF NOT EXISTS your_table (
 ./mvn test jacoco:report
 
 # Run specific test class
-./mvn test -Dtest=UserServiceTest
+./mvn test -Dtest=UserControllerIntegrationTest
 ```
-
 
 ### Test Categories
 
-- **Unit Tests** - Service layer testing
+- **Unit Tests** - Test use cases in isolation (without Spring)
 - **Integration Tests** - Full application context with test data
     - LoginControllerIntegrationTest
     - MenuItemControllerIntegrationTest
     - RestaurantControllerIntegrationTest
     - UserControllerIntegrationTest
-- **Security Tests** - Authentication & authorization
-- **End to End** - Postman collections
+- **Domain Tests** - Test domain entity business rules
 
 ### Test Infrastructure
-- **Test Database**: Uses Testcontainers with PostgreSQL similar to production
-- **Isolation**: Each test class runs in isolation with fresh data
-- **Flyway Migrations**: Applied to test database on startup
-- **Test Data**: Managed via SQL scripts (`test-data.sql`, `cleanup.sql`)
-- **BaseIntegrationTest**: Common test configuration and utilities
+- **Test Database**: PostgreSQL with Flyway migrations
+- **Test Isolation**: Each test runs with fresh data
+- **Test Data**: Managed via SQL scripts
+- **BaseIntegrationTest**: Common test configuration
 
-## 🐳 Docker
+##  Docker
 
 ### Docker Compose Services
 
@@ -400,7 +541,7 @@ services:
 
 ### Docker Commands
 
-```
+```bash
 # Build and start all services
 docker-compose up -d
 
@@ -414,10 +555,9 @@ docker-compose down
 docker-compose up --build -d
 ```
 
-
 ### Production Deployment
 
-```
+```bash
 # Build production image
 docker build -t quickbite:latest .
 
@@ -428,8 +568,38 @@ docker run -p 8080:8080 \
   quickbite:latest
 ```
 
+##  Clean Architecture
 
-## 🤝 Contributing
+### Benefits Achieved
+
+1. ✅ **Framework Independence** - Business logic doesn't depend on Spring
+2. ✅ **Testability** - Easy to unit test without infrastructure
+3. ✅ **Maintainability** - Clear separation of concerns
+4. ✅ **Flexibility** - Easy to swap implementations
+5. ✅ **Scalability** - Clean boundaries for growth
+
+### Dependency Flow
+
+```
+Presentation → Application → Domain ← Infrastructure
+                                ↑
+                          (implements)
+```
+
+- **Presentation** depends on Application
+- **Application** depends on Domain
+- **Infrastructure** implements Domain interfaces
+- **Domain** depends on nothing (pure business logic)
+
+### Key Patterns
+
+- **Use Case Pattern** - Single responsibility for each operation
+- **Repository Pattern** - Abstract data access
+- **Adapter Pattern** - Infrastructure implements domain interfaces
+- **DTO Pattern** - Separate API contracts from domain
+- **Factory Pattern** - Create domain entities safely
+
+##  Contributing
 
 1. **Fork** the repository
 2. **Create** a feature branch (`git checkout -b feature/amazing-feature`)
@@ -439,29 +609,32 @@ docker run -p 8080:8080 \
 
 ### Development Guidelines
 
-- Follow existing code style and patterns
-- Write tests for new features
-- Update documentation as needed
+- Follow Clean Architecture principles
+- Keep domain layer pure (no framework dependencies)
+- Write use cases for business operations
+- Test domain entities and use cases
 - Use meaningful commit messages
 - Ensure all tests pass before submitting PR
 
-## 📄 License
+##  License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-## 👥 Authors
+##  Authors
 
 - **Michel Maia** - *Initial work* - [GitHub Profile](https://github.com/dimermichel)
 
-## 🙏 Acknowledgments
+##  Acknowledgments
 
 - FIAP 2025 Java Tech Challenge
+- Clean Architecture by Robert C. Martin
+- Domain-Driven Design community
 - Spring Boot community
 - PostgreSQL team
 
 ---
 
-## 📞 Support
+##  Support
 
 If you have any questions or need help, please:
 
@@ -471,41 +644,31 @@ If you have any questions or need help, please:
 
 ---
 
-## 📝 Recent Updates
+##  Recent Updates
 
-### Latest Changes (v2.2.0)
-- 🛡️ **Enhanced Security**: Updated RBAC - Owners can now delete their own restaurants and menu items
+### Latest Changes (v3.0.0) - Clean Architecture Refactor
+-  **Complete Refactor**: Migrated entire application to Clean Architecture
+-  **Domain Layer**: Pure business logic with no framework dependencies
+-  **Use Cases**: Single-responsibility operations for all features
+-  **Repository Pattern**: Domain-defined interfaces, infrastructure implementations
+-  **Testability**: Easy to unit test business logic in isolation
+-  **Maintainability**: Clear separation between layers
+-  **User Feature**: 6 use cases (Register, Create, Get, List, Update, Delete)
+-  **Auth Feature**: 2 use cases (Login, ChangePassword)
+-  **Restaurant Feature**: 5 use cases (Create, Get, List, Update, Delete)
+-  **MenuItem Feature**: 5 use cases (Create, Get, List, Update, Delete)
+-  **Global Error Handling**: Centralized exception handling
+-  **Pure Domain Entities**: Business rules encapsulated in entities
+
+### Previous Updates (v2.2.0)
+- ️ **Enhanced Security**: Updated RBAC - Owners can now delete their own restaurants and menu items
 - ✨ **Improved Error Handling**: Registration now returns proper 409 status for duplicate usernames/emails
-- 🔒 **User Deletion Protection**: Prevents deletion of users who own restaurants with detailed error messages
-- 🧪 **Comprehensive Testing**: Added full integration test suite for all controllers
-- 🔐 **Password Validation**: Enhanced password encoding and validation in update operations
-- 📚 **Better API Documentation**: Updated OpenAPI responses to reflect all possible status codes
-- 🎯 **Error DTOs**: Consistent error response format across all endpoints
-- 🔄 **Data Integrity**: Improved handling of database constraint violations with user-friendly messages
-
-### Previous Updates (v2.1.0)
-- 🐛 **Fixed**: Menu item search now properly returns multiple results
-- ✨ **Enhanced**: Search endpoint supports partial name matching with LIKE queries
-- 🔄 **Refactored**: Complete migration to DTO pattern for all API endpoints
-- 🎯 **Improved**: Restaurant endpoints now return DTOs instead of entities
-- 🔍 **Added**: Case-insensitive search functionality for menu items
-- 📚 **Updated**: API documentation to reflect DTO responses
-- 🛡️ **Enhanced**: Better error handling in repository layer
-- 🧹 **Cleaned**: Removed entity exposure from API layer
-
-### Bug Fixes (v2.2.0)
-- Fixed user deletion to check for restaurant ownership
-- Corrected HTTP status codes for conflict scenarios (409)
-- Improved error messages for duplicate username/email registration
-- Enhanced password validation to prevent null/empty passwords
-- Fixed security configuration for restaurant GET endpoints
-
-### Bug Fixes (v2.1.0)
-- Fixed `IncorrectResultSizeDataAccessException` in menu item search
-- Corrected SQL queries to use proper column names (`is_available` instead of `available`)
-- Improved repository methods to handle multiple results correctly
-
+-  **User Deletion Protection**: Prevents deletion of users who own restaurants with detailed error messages
+-  **Comprehensive Testing**: Added full integration test suite for all controllers
+-  **Password Validation**: Enhanced password encoding and validation in update operations
 
 ---
 
 **Made with ❤️ for FIAP 2025 Java Tech Challenge**
+
+**Following Clean Architecture by Robert C. Martin (Uncle Bob)**
