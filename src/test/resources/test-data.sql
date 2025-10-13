@@ -25,11 +25,11 @@ VALUES ((SELECT id FROM users WHERE username = 'admin'),
 
 -- Insert normal user
 INSERT INTO users (name, username, email, password, enabled, created_at, updated_at)
-VALUES ('user','testuser', 'user@test.com', '$2a$10$ScXSXlH8BHun5ej50hABZulcZRAZg7el0xwMPX6CeJ2llFkqnRKuC', true, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+VALUES ('user','testnormaluser', 'normaluser@test.com', '$2a$10$ScXSXlH8BHun5ej50hABZulcZRAZg7el0xwMPX6CeJ2llFkqnRKuC', true, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
 
 -- Assign a USER role to the test user
 INSERT INTO user_roles (user_id, role_id)
-VALUES ((SELECT id FROM users WHERE username = 'testuser'),
+VALUES ((SELECT id FROM users WHERE username = 'testnormaluser'),
         (SELECT id FROM roles WHERE name = 'USER')
        );
 

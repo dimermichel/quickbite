@@ -192,7 +192,7 @@ class RestaurantControllerIntegrationTest extends BaseIntegrationTest {
     @Test
     void shouldNotCreateRestaurantWithUserThatDoesNotHaveOwnerOrAdminRole() {
         // Given - ID of a user without an OWNER or ADMIN role
-        var userId = userRepository.findByUsername("testuser")
+        var userId = userRepository.findByUsername("testnormaluser")
                 .orElseThrow(() -> new IllegalStateException("Test user not found"))
                 .getId();
 
