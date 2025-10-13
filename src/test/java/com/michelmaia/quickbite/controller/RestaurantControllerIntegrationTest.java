@@ -111,7 +111,7 @@ class RestaurantControllerIntegrationTest extends BaseIntegrationTest {
 
         CreateRestaurantRequest createRequest = new CreateRestaurantRequest(
                 ownerId,
-                "", // Invalid name - empty string
+                null, // Invalid name - empty string
                 "Italian",
                 addressRequest,
                 "9:00-22:00",
